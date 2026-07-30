@@ -8,7 +8,7 @@
       content="A guided CEC220 workbench for carries, borrows, two's complement, overflow, underflow, and fixed-width arithmetic."
     >
     <title>Fixed-Width Arithmetic · CEC220 Logic Studio</title>
-    <link rel="stylesheet" href="../shared/styles.css?v=20260730d">
+    <link rel="stylesheet" href="../shared/styles.css?v=20260730e">
   </head>
   <body class="tool-page" data-mode="learn">
     <header class="site-header">
@@ -64,6 +64,9 @@
                 </button>
                 <button class="preset-button" type="button" data-preset="unsigned-borrow-chain">
                   10 − 6: follow the borrow chain
+                </button>
+                <button class="preset-button" type="button" data-preset="borrow-across-zeros">
+                  8 − 1: regroup across zeros
                 </button>
                 <button class="preset-button" type="button" data-preset="unsigned-overflow">
                   15 + 1: carry beyond four bits
@@ -360,6 +363,6 @@
       </footer>
     </main>
 
-    <script type="module" src="./arithmetic.js?v=20260730d"></script>
+    <script type="module" src="./arithmetic.js?v=20260730e"></script>
   </body>
 </html>

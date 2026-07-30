@@ -989,6 +989,12 @@ fieldset {
   background: var(--red-soft);
 }
 
+.mechanics-table input.propagated-borrow {
+  border-color: rgba(255, 224, 130, 0.58);
+  background: rgba(255, 224, 130, 0.1);
+  color: var(--yellow);
+}
+
 .mechanics-table td.linked-flow {
   color: var(--faint);
   font-weight: 750;
@@ -1003,6 +1009,46 @@ fieldset {
 .borrow-give {
   color: var(--yellow);
   white-space: nowrap;
+}
+
+.mechanics-table .regrouped-row td {
+  border-color: rgba(255, 224, 130, 0.28);
+  background: rgba(255, 224, 130, 0.05);
+  color: var(--yellow);
+  font-family: var(--mono);
+  font-size: 1rem;
+  font-weight: 780;
+}
+
+.mechanics-table .regrouped-row td:first-child {
+  color: var(--yellow);
+  font-family: inherit;
+  font-size: 0.74rem;
+}
+
+.mechanics-table .regrouped-row td.needs-loan {
+  border-color: rgba(255, 123, 123, 0.48);
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.regrouped-two {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+}
+
+.regrouped-two small {
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 650;
+}
+
+.needs-loan-label {
+  font-size: 0.62rem;
+  line-height: 1.05;
+  text-transform: uppercase;
 }
 
 .borrow-process {
@@ -1032,6 +1078,32 @@ fieldset {
 .borrow-loan-list {
   display: grid;
   gap: 10px;
+}
+
+.regrouped-transition {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-bottom: 12px;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 1rem;
+  font-weight: 760;
+}
+
+.regrouped-transition small {
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.borrow-propagation-note {
+  margin: -3px 0 12px;
+  color: var(--yellow);
+  font-size: 0.74rem;
+  line-height: 1.45;
 }
 
 .borrow-loan {

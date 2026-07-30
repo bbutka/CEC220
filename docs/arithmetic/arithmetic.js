@@ -34,6 +34,18 @@ const presets = {
     callout:
       "When a binary column is too small, borrow 1 from the next position. That borrowed 1 has a value of 2 in the current column, just as a borrowed ten contributes 10 in decimal.",
   },
+  "borrow-across-zeros": {
+    width: 4,
+    base: 10,
+    interpretation: "unsigned",
+    operation: "subtract",
+    subtractionMethod: "borrow",
+    a: "8",
+    b: "1",
+    calloutTitle: "A borrow can travel across several zero columns.",
+    callout:
+      "Regroup 1000₂ as 0 1 1 2 in column units. The temporary 2 means two units of bit 0—the same value as 10₂—so 2 − 1 writes the result bit 1.",
+  },
   "unsigned-overflow": {
     width: 4,
     base: 10,
@@ -576,31 +588,150 @@ function renderMechanics() {
     : "Work from bit 0 on the right toward the most-significant bit. Enter the result and carry leaving each column; it appears automatically as the carry-in to the next column.";
   byId("borrowProcess").hidden = !borrowMethod;
 
+  const flowInCells = positions
+    .map(
+      (position) =>
+        `<td class="linked-flow" data-flow-in-position="${position}">${position === 0 ? initialFlow : "·"}</td>`,
+    )
+    .join("");
+  const flowInputs = positions
+    .map(
+      (position) =>
+        `<td><input aria-label="${borrowMethod ? `Borrow from bit ${position + 1} into bit ${position}` : `${flowName} from bit ${position}`}" inputmode="numeric" maxlength="1" data-mechanics-kind="flow" data-position="${position}"></td>`,
+    )
+    .join("");
+  const resultInputs = positions
+    .map(
+      (position) =>
+        `<td><input aria-label="Result bit ${position}" inputmode="numeric" maxlength="1" data-mechanics-kind="result" data-position="${position}"></td>`,
+    )
+    .join("");
+  const workRows = borrowMethod
+    ? `
+        <tr><td>${flowInName}</td>${flowInCells}</tr>
+        <tr><td>${flowName}</td>${flowInputs}</tr>
+        <tr class="regrouped-row">
+          <td>A after regrouping</td>
+          ${positions.map((position) => `<td data-regrouped-position="${position}"></td>`).join("")}
+        </tr>
+        <tr><td>result bit</td>${resultInputs}</tr>
+      `
+    : `
+        <tr><td>${flowInName}</td>${flowInCells}</tr>
+        <tr><td>result bit</td>${resultInputs}</tr>
+        <tr><td>${flowName}</td>${flowInputs}</tr>
+      `;
+
   byId("mechanicsTable").innerHTML = `
     <table class="mechanics-table" aria-label="Bit-by-bit arithmetic">
       <thead><tr><th>bit position</th>${positions.map((position) => `<th>${position}</th>`).join("")}</tr></thead>
       <tbody>
         <tr><td>A</td>${[...aBits].map((bit) => `<td class="operand">${bit}</td>`).join("")}</tr>
         <tr><td>${twosMethod ? "~B" : "B"}</td>${[...secondBits].map((bit) => `<td class="operand">${bit}</td>`).join("")}</tr>
-        <tr>
-          <td>${flowInName}</td>
-          ${positions
-            .map(
-              (position) =>
-                `<td class="linked-flow" data-flow-in-position="${position}">${position === 0 ? initialFlow : "·"}</td>`,
-            )
-            .join("")}
-        </tr>
-        <tr><td>result bit</td>${positions.map((position) => `<td><input aria-label="Result bit ${position}" inputmode="numeric" maxlength="1" data-mechanics-kind="result" data-position="${position}"></td>`).join("")}</tr>
-        <tr><td>${flowName}</td>${positions.map((position) => `<td><input aria-label="${borrowMethod ? `Borrow from bit ${position + 1} into bit ${position}` : `${flowName} from bit ${position}`}" inputmode="numeric" maxlength="1" data-mechanics-kind="flow" data-position="${position}"></td>`).join("")}</tr>
+        ${workRows}
       </tbody>
     </table>
   `;
 
   document
     .querySelectorAll('[data-mechanics-kind="flow"]')
-    .forEach((input) => input.addEventListener("input", updateLinkedFlows));
+    .forEach((input) => input.addEventListener("input", handleFlowInput));
   updateLinkedFlows();
+}
+
+function handleFlowInput(event) {
+  const input = event.currentTarget;
+  input.classList.remove("propagated-borrow");
+  delete input.dataset.autoBorrow;
+
+  const borrowMethod =
+    current.operation === "subtract" &&
+    current.subtractionMethod === "borrow";
+  if (!borrowMethod) {
+    updateLinkedFlows();
+    return;
+  }
+
+  all('[data-mechanics-kind="flow"][data-auto-borrow="true"]').forEach(
+    (autoInput) => {
+      autoInput.value = "";
+      autoInput.classList.remove("propagated-borrow", "correct", "incorrect");
+      delete autoInput.dataset.autoBorrow;
+    },
+  );
+
+  const studentLoans = all('[data-mechanics-kind="flow"]')
+    .filter(
+      (flowInput) =>
+        flowInput.value.trim() === "1" &&
+        flowInput.dataset.autoBorrow !== "true",
+    )
+    .map((flowInput) => Number(flowInput.dataset.position))
+    .sort((a, b) => a - b);
+
+  for (const start of studentLoans) {
+    const startColumn = current.columns.find(
+      (column) => column.position === start,
+    );
+    if (startColumn?.borrowOut !== 1) continue;
+    for (let position = start + 1; position < current.width; position += 1) {
+      const column = current.columns.find(
+        (item) => item.position === position,
+      );
+      if (column?.borrowOut !== 1) break;
+      const propagated = document.querySelector(
+        `[data-mechanics-kind="flow"][data-position="${position}"]`,
+      );
+      propagated.value = "1";
+      propagated.dataset.autoBorrow = "true";
+      propagated.classList.add("propagated-borrow");
+    }
+  }
+  updateLinkedFlows();
+}
+
+function regroupedColumn(position) {
+  const column = current.columns.find((item) => item.position === position);
+  const loanFromRight =
+    position === 0
+      ? 0
+      : document.querySelector(
+            `[data-mechanics-kind="flow"][data-position="${position - 1}"]`,
+          )?.value.trim() === "1"
+        ? 1
+        : 0;
+  const loanFromLeft =
+    document.querySelector(
+      `[data-mechanics-kind="flow"][data-position="${position}"]`,
+    )?.value.trim() === "1"
+      ? 1
+      : 0;
+  const value = column.aBit - loanFromRight + 2 * loanFromLeft;
+  return {
+    position,
+    value,
+    needsLoan: value < 0,
+  };
+}
+
+function updateRegroupedMinuend() {
+  for (let position = 0; position < current.width; position += 1) {
+    const target = document.querySelector(
+      `[data-regrouped-position="${position}"]`,
+    );
+    if (!target) continue;
+    const regrouped = regroupedColumn(position);
+    target.classList.toggle("needs-loan", regrouped.needsLoan);
+    target.classList.toggle("temporary-two", regrouped.value === 2);
+    if (regrouped.needsLoan) {
+      target.innerHTML = '<span class="needs-loan-label">needs<br>loan</span>';
+    } else if (regrouped.value === 2) {
+      target.innerHTML =
+        '<span class="regrouped-two">2 <small>= 10₂</small></span>';
+    } else {
+      target.textContent = String(regrouped.value);
+    }
+  }
 }
 
 function updateBorrowProcess() {
@@ -623,8 +754,30 @@ function updateBorrowProcess() {
     return;
   }
 
+  const regroupedValues = Array.from(
+    { length: current.width },
+    (_, index) => current.width - 1 - index,
+  ).map((position) => {
+    const regrouped = regroupedColumn(position);
+    return regrouped.needsLoan ? "needs loan" : String(regrouped.value);
+  });
+  const propagatedPositions = all(
+    '[data-mechanics-kind="flow"][data-auto-borrow="true"]',
+  ).map((input) => input.dataset.position);
+
   guide.innerHTML = `
     <div class="borrow-process-title">Borrow process</div>
+    <div class="regrouped-transition">
+      <span>${bitsFor(current.rawA, current.width)}₂</span>
+      <span class="borrow-direction">→</span>
+      <span>${regroupedValues.join(" ")}</span>
+      <small>column units; 2 means 10₂ in that column</small>
+    </div>
+    ${
+      propagatedPositions.length
+        ? `<div class="borrow-propagation-note">The loan passes automatically across zero ${propagatedPositions.length === 1 ? "column" : "columns"} ${propagatedPositions.join(", ")} until it reaches a 1.</div>`
+        : ""
+    }
     <div class="borrow-loan-list">
       ${activeLoans
         .map((position) => {
@@ -695,6 +848,7 @@ function updateLinkedFlows() {
     }
     target.classList.toggle("known", value === "0" || value === "1");
   }
+  updateRegroupedMinuend();
   updateBorrowProcess();
 }
 
@@ -1043,7 +1197,15 @@ function revealNext() {
     input.value = expectedMechanicsValue(input);
     input.classList.remove("incorrect");
     input.classList.add("correct");
-    updateLinkedFlows();
+    if (
+      input.dataset.mechanicsKind === "flow" &&
+      current.operation === "subtract" &&
+      current.subtractionMethod === "borrow"
+    ) {
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    } else {
+      updateLinkedFlows();
+    }
     setFeedback(
       "mechanicsFeedback",
       "hint",
