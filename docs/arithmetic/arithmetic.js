@@ -313,6 +313,8 @@ function renderRepresentations() {
     `${current.aValue} ${operator} ${current.bValue}`;
   byId("predictionExpression").textContent =
     `${current.aValue} ${operator} ${current.bValue} = ?`;
+  byId("predictionResultLabel").textContent =
+    `Your answer: ${current.aValue} ${operator} ${current.bValue} =`;
   byId("predictionFitsLabel").textContent =
     `Does it fit in ${current.width}-bit ${current.interpretation}?`;
 

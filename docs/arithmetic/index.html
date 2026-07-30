@@ -8,7 +8,7 @@
       content="A guided CEC220 workbench for carries, borrows, two's complement, overflow, underflow, and fixed-width arithmetic."
     >
     <title>Fixed-Width Arithmetic · CEC220 Logic Studio</title>
-    <link rel="stylesheet" href="../shared/styles.css">
+    <link rel="stylesheet" href="../shared/styles.css?v=20260730b">
   </head>
   <body class="tool-page" data-mode="learn">
     <header class="site-header">
@@ -225,18 +225,18 @@
             <div class="panel-header">
               <h2><span class="stage-number">2</span>Predict the mathematics</h2>
             </div>
+            <div class="prediction-equation" aria-label="Arithmetic to predict">
+              <span class="label">Solve this problem</span>
+              <span class="value" id="predictionExpression"></span>
+            </div>
             <p class="microcopy" style="margin-bottom: 16px">
               Ignore the register width for a moment. What does ordinary
               mathematics say, and can that value be represented in the selected
               format?
             </p>
-            <div class="prediction-equation" aria-label="Arithmetic to predict">
-              <span class="label">Problem</span>
-              <span class="value" id="predictionExpression"></span>
-            </div>
             <div class="field-row">
               <div class="field">
-                <label for="predictionResult">Mathematical result</label>
+                <label for="predictionResult" id="predictionResultLabel">Your answer</label>
                 <input class="mono-input" id="predictionResult" inputmode="numeric" autocomplete="off">
               </div>
               <div class="field">
@@ -364,6 +364,6 @@
       </footer>
     </main>
 
-    <script type="module" src="./arithmetic.js"></script>
+    <script type="module" src="./arithmetic.js?v=20260730b"></script>
   </body>
 </html>

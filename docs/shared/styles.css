@@ -845,6 +845,15 @@ fieldset {
   background: var(--cyan-soft);
 }
 
+.prediction-equation {
+  margin-bottom: 14px;
+  padding: 20px;
+  border-width: 2px;
+  background:
+    linear-gradient(90deg, rgba(82, 215, 208, 0.16), rgba(82, 215, 208, 0.06)),
+    var(--panel-soft);
+}
+
 .problem-equation {
   margin-bottom: 14px;
   padding: 18px 20px;
@@ -868,6 +877,15 @@ fieldset {
 
 .problem-equation .value {
   font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1;
+}
+
+.prediction-equation .label {
+  color: var(--cyan);
+}
+
+.prediction-equation .value {
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
   line-height: 1;
 }
 
