@@ -832,6 +832,7 @@ fieldset {
   font-size: 0.62rem;
 }
 
+.problem-equation,
 .prediction-equation {
   display: flex;
   align-items: baseline;
@@ -844,6 +845,12 @@ fieldset {
   background: var(--cyan-soft);
 }
 
+.problem-equation {
+  margin-bottom: 14px;
+  padding: 18px 20px;
+}
+
+.problem-equation .label,
 .prediction-equation .label {
   color: var(--muted);
   font-size: 0.78rem;
@@ -851,11 +858,17 @@ fieldset {
   text-transform: uppercase;
 }
 
+.problem-equation .value,
 .prediction-equation .value {
   color: var(--ink);
   font-family: var(--mono);
   font-size: 1.45rem;
   font-weight: 780;
+}
+
+.problem-equation .value {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1;
 }
 
 .bit-strip {
@@ -1406,6 +1419,7 @@ body[data-mode="verify"] .guided-only {
     padding: 17px;
   }
 
+  .problem-equation,
   .prediction-equation {
     align-items: flex-start;
     flex-direction: column;

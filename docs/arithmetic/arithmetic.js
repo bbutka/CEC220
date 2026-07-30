@@ -309,6 +309,8 @@ function formatPrimaryValue(raw) {
 function renderRepresentations() {
   const range = rangeFor(current.width, current.interpretation);
   const operator = current.operation === "add" ? "+" : "−";
+  byId("representationExpression").textContent =
+    `${current.aValue} ${operator} ${current.bValue}`;
   byId("predictionExpression").textContent =
     `${current.aValue} ${operator} ${current.bValue} = ?`;
   byId("predictionFitsLabel").textContent =
@@ -328,7 +330,7 @@ function renderRepresentations() {
     <div class="representation">
       <div class="label">${current.width}-bit ${current.interpretation} range</div>
       <div class="value">${range.min}…${range.max}</div>
-      <div class="microcopy">Problem: ${current.aValue} ${operator} ${current.bValue}</div>
+      <div class="microcopy">Available values at this width</div>
     </div>
   `;
 
