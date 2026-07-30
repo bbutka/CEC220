@@ -833,6 +833,17 @@ fieldset {
   background: var(--red-soft);
 }
 
+.mechanics-table td.linked-flow {
+  color: var(--faint);
+  font-weight: 750;
+}
+
+.mechanics-table td.linked-flow.known {
+  border-color: rgba(82, 215, 208, 0.42);
+  background: var(--cyan-soft);
+  color: var(--cyan);
+}
+
 .table-note {
   margin: 8px 0 0;
   color: var(--faint);

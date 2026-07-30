@@ -131,7 +131,13 @@ const modeText = {
 
 let current = null;
 let currentMode = "learn";
-let hintCounts = { prediction: 0, twos: 0, mechanics: 0, interpretation: 0 };
+let hintCounts = {
+  representation: 0,
+  prediction: 0,
+  twos: 0,
+  mechanics: 0,
+  interpretation: 0,
+};
 
 function selectedRadio(name) {
   return document.querySelector(`input[name="${name}"]:checked`)?.value;
@@ -176,6 +182,7 @@ function clearAnswerState() {
   }
 
   for (const id of [
+    "representationFeedback",
     "predictionFeedback",
     "twosFeedback",
     "mechanicsFeedback",
@@ -185,7 +192,16 @@ function clearAnswerState() {
   }
 
   byId("resultBanner").classList.remove("visible");
-  hintCounts = { prediction: 0, twos: 0, mechanics: 0, interpretation: 0 };
+  byId("predictionStage").hidden = true;
+  byId("mechanicsStage").hidden = true;
+  byId("interpretationStage").hidden = true;
+  hintCounts = {
+    representation: 0,
+    prediction: 0,
+    twos: 0,
+    mechanics: 0,
+    interpretation: 0,
+  };
 }
 
 function applyPreset(name) {
@@ -300,12 +316,12 @@ function renderRepresentations() {
     <div class="representation primary">
       <div class="label">Operand A · ${current.interpretation}</div>
       <div class="value">${formatPrimaryValue(current.rawA)}</div>
-      <div class="microcopy">${a.bits}<sub>2</sub> · ${a.hex}</div>
+      <div class="microcopy" id="repAMeta">Convert A to ${current.width}-bit binary below.</div>
     </div>
     <div class="representation primary">
       <div class="label">Operand B · ${current.interpretation}</div>
       <div class="value">${formatPrimaryValue(current.rawB)}</div>
-      <div class="microcopy">${b.bits}<sub>2</sub> · ${b.hex}</div>
+      <div class="microcopy" id="repBMeta">Convert B to ${current.width}-bit binary below.</div>
     </div>
     <div class="representation">
       <div class="label">${current.width}-bit ${current.interpretation} range</div>
@@ -318,23 +334,127 @@ function renderRepresentations() {
     { length: current.width },
     (_, index) => current.width - 1 - index,
   );
-  const bitCells = (bits) =>
-    [...bits]
+  const bitInputs = (kind) =>
+    headings
       .map(
-        (bit, index) =>
-          `<td class="operand${index === 0 && current.interpretation === "signed" ? " sign" : ""}">${bit}</td>`,
+        (position, index) =>
+          `<td class="${index === 0 && current.interpretation === "signed" ? "sign" : ""}">
+            <input
+              aria-label="Operand ${kind} bit ${position}"
+              inputmode="numeric"
+              maxlength="1"
+              data-operand-kind="${kind}"
+              data-position="${position}"
+            >
+          </td>`,
       )
       .join("");
 
   byId("operandBits").innerHTML = `
-    <table class="mechanics-table" aria-label="Operand bit patterns">
+    <table class="mechanics-table" aria-label="Enter operand bit patterns">
       <thead><tr><th>bit position</th>${headings.map((value) => `<th>${value}</th>`).join("")}</tr></thead>
       <tbody>
-        <tr><td>A</td>${bitCells(a.bits)}</tr>
-        <tr><td>${current.operation === "add" ? "B" : "B"}</td>${bitCells(b.bits)}</tr>
+        <tr><td>A</td>${bitInputs("A")}</tr>
+        <tr><td>B</td>${bitInputs("B")}</tr>
       </tbody>
     </table>
   `;
+}
+
+function expectedOperandBit(input) {
+  const position = Number(input.dataset.position);
+  const bits =
+    input.dataset.operandKind === "A"
+      ? bitsFor(current.rawA, current.width)
+      : bitsFor(current.rawB, current.width);
+  return bits[current.width - 1 - position];
+}
+
+function operandInputsInOrder() {
+  return ["A", "B"].flatMap((kind) =>
+    Array.from({ length: current.width }, (_, index) => current.width - 1 - index)
+      .map((position) =>
+        document.querySelector(
+          `[data-operand-kind="${kind}"][data-position="${position}"]`,
+        ),
+      ),
+  );
+}
+
+function showRepresentationConfirmation() {
+  const a = representation(current.rawA, current.width);
+  const b = representation(current.rawB, current.width);
+  byId("repAMeta").innerHTML = `${a.bits}<sub>2</sub> · ${a.hex}`;
+  byId("repBMeta").innerHTML = `${b.bits}<sub>2</sub> · ${b.hex}`;
+}
+
+function checkRepresentation(showFeedback = true) {
+  let firstWrong = null;
+  for (const input of operandInputsInOrder()) {
+    const correct = validateBitInput(input, expectedOperandBit(input));
+    if (!correct && !firstWrong) firstWrong = input;
+  }
+
+  if (firstWrong) {
+    if (showFeedback) {
+      setFeedback(
+        "representationFeedback",
+        "error",
+        `The first incorrect or missing entry is operand ${firstWrong.dataset.operandKind}, bit ${firstWrong.dataset.position}.`,
+      );
+      firstWrong.focus();
+    }
+    return false;
+  }
+
+  showRepresentationConfirmation();
+  byId("predictionStage").hidden = false;
+  if (showFeedback) {
+    setFeedback(
+      "representationFeedback",
+      "success",
+      "Both fixed-width operand patterns are correct. Keep these bits unchanged while performing the arithmetic.",
+    );
+  }
+  return true;
+}
+
+function representationHint() {
+  hintCounts.representation += 1;
+  const unresolved = operandInputsInOrder().find(
+    (input) => input.value.trim() !== expectedOperandBit(input),
+  );
+  if (!unresolved) {
+    setFeedback(
+      "representationFeedback",
+      "success",
+      "Both operand patterns are complete.",
+    );
+    return;
+  }
+
+  const kind = unresolved.dataset.operandKind;
+  const raw = kind === "A" ? current.rawA : current.rawB;
+  const selected = kind === "A" ? current.aValue : current.bValue;
+  let message;
+  if (current.interpretation === "signed" && selected < 0) {
+    message =
+      `${kind} is negative. Write ${Math.abs(selected)} in ${current.width} bits, invert every bit, and add 1.`;
+  } else {
+    const powers = Array.from(
+      { length: current.width },
+      (_, position) => position,
+    )
+      .filter((position) => ((raw >> position) & 1) === 1)
+      .map((position) => `2^${position}`);
+    message =
+      `${kind} = ${selected}. Its nonzero place values are ${powers.length ? powers.join(" + ") : "none; every bit is 0"}.`;
+  }
+
+  if (hintCounts.representation > 1) {
+    message += ` Focus next on bit ${unresolved.dataset.position}.`;
+  }
+  setFeedback("representationFeedback", "hint", message);
 }
 
 function renderTwosPreparation() {
@@ -342,6 +462,7 @@ function renderTwosPreparation() {
     current.operation === "subtract" &&
     current.subtractionMethod === "twos";
   byId("twosPreparation").hidden = !show;
+  byId("bitMechanicsWork").hidden = show;
   if (!show) {
     byId("twosTable").innerHTML = "";
     return;
@@ -387,6 +508,9 @@ function renderMechanics() {
     current.subtractionMethod === "twos";
   const flowName =
     current.operation === "subtract" && !twosMethod ? "borrow out" : "carry out";
+  const flowInName =
+    current.operation === "subtract" && !twosMethod ? "borrow in" : "carry in";
+  const initialFlow = twosMethod ? 1 : 0;
 
   byId("mechanicsInstruction").textContent = twosMethod
     ? "Add A + ~B with an initial carry-in of 1 at bit 0. This is the hardware form of A − B."
@@ -400,12 +524,49 @@ function renderMechanics() {
       <tbody>
         <tr><td>A</td>${[...aBits].map((bit) => `<td class="operand">${bit}</td>`).join("")}</tr>
         <tr><td>${twosMethod ? "~B" : "B"}</td>${[...secondBits].map((bit) => `<td class="operand">${bit}</td>`).join("")}</tr>
-        ${twosMethod ? `<tr><td>carry in</td>${positions.map((position) => `<td>${position === 0 ? "1" : "←"}</td>`).join("")}</tr>` : ""}
+        <tr>
+          <td>${flowInName}</td>
+          ${positions
+            .map(
+              (position) =>
+                `<td class="linked-flow" data-flow-in-position="${position}">${position === 0 ? initialFlow : "·"}</td>`,
+            )
+            .join("")}
+        </tr>
         <tr><td>result bit</td>${positions.map((position) => `<td><input aria-label="Result bit ${position}" inputmode="numeric" maxlength="1" data-mechanics-kind="result" data-position="${position}"></td>`).join("")}</tr>
         <tr><td>${flowName}</td>${positions.map((position) => `<td><input aria-label="${flowName} from bit ${position}" inputmode="numeric" maxlength="1" data-mechanics-kind="flow" data-position="${position}"></td>`).join("")}</tr>
       </tbody>
     </table>
   `;
+
+  document
+    .querySelectorAll('[data-mechanics-kind="flow"]')
+    .forEach((input) => input.addEventListener("input", updateLinkedFlows));
+  updateLinkedFlows();
+}
+
+function updateLinkedFlows() {
+  if (!current) return;
+  const twosMethod =
+    current.operation === "subtract" &&
+    current.subtractionMethod === "twos";
+  for (let position = 0; position < current.width; position += 1) {
+    const target = document.querySelector(
+      `[data-flow-in-position="${position}"]`,
+    );
+    if (!target) continue;
+    if (position === 0) {
+      target.textContent = twosMethod ? "1" : "0";
+      target.classList.add("known");
+      continue;
+    }
+    const source = document.querySelector(
+      `[data-mechanics-kind="flow"][data-position="${position - 1}"]`,
+    );
+    const value = source?.value.trim();
+    target.textContent = value === "0" || value === "1" ? value : "·";
+    target.classList.toggle("known", value === "0" || value === "1");
+  }
 }
 
 function expectedTwosValue(input) {
@@ -458,6 +619,7 @@ function checkTwos(showFeedback = true) {
       `Correct: −B is ${current.twos.negatedBits}. The adder implements the same operation as A + ~B + 1.`,
     );
   }
+  byId("bitMechanicsWork").hidden = false;
   return true;
 }
 
@@ -525,6 +687,7 @@ function checkMechanics(showFeedback = true) {
       `Every column is correct. Reading the result from the most-significant bit gives ${current.resultBits}.`,
     );
   }
+  byId("interpretationStage").hidden = false;
   return true;
 }
 
@@ -556,6 +719,7 @@ function checkPrediction(showFeedback = true) {
       `Correct: the mathematical result is ${current.mathematicalResult}, and it ${fitText} in the selected range.`,
     );
   }
+  byId("mechanicsStage").hidden = false;
   return true;
 }
 
@@ -686,15 +850,13 @@ function showVerifiedResult() {
 }
 
 function checkAll() {
-  const predictionOkay = checkPrediction(true);
-  const twosOkay = checkTwos(true);
-  const mechanicsOkay = checkMechanics(true);
-  const interpretationOkay = checkInterpretation(true);
-  if (predictionOkay && twosOkay && mechanicsOkay && interpretationOkay) {
-    showVerifiedResult();
-  } else {
-    byId("resultBanner").classList.remove("visible");
-  }
+  byId("resultBanner").classList.remove("visible");
+  if (!checkRepresentation(true)) return;
+  if (!checkPrediction(true)) return;
+  if (!checkTwos(true)) return;
+  if (!checkMechanics(true)) return;
+  if (!checkInterpretation(true)) return;
+  showVerifiedResult();
 }
 
 function firstUnresolvedMechanics() {
@@ -720,6 +882,7 @@ function revealNext() {
       );
       return;
     }
+    byId("bitMechanicsWork").hidden = false;
   }
 
   const input = firstUnresolvedMechanics();
@@ -727,6 +890,7 @@ function revealNext() {
     input.value = expectedMechanicsValue(input);
     input.classList.remove("incorrect");
     input.classList.add("correct");
+    updateLinkedFlows();
     setFeedback(
       "mechanicsFeedback",
       "hint",
@@ -900,6 +1064,10 @@ byId("loadProblem").addEventListener("click", loadProblem);
 byId("newPractice").addEventListener("click", newPracticeProblem);
 byId("practiceScope").addEventListener("change", newPracticeProblem);
 byId("copyProblem").addEventListener("click", copyProblem);
+byId("checkRepresentation").addEventListener("click", () =>
+  checkRepresentation(true),
+);
+byId("representationHint").addEventListener("click", representationHint);
 byId("checkPrediction").addEventListener("click", () => checkPrediction(true));
 byId("predictionHint").addEventListener("click", predictionHint);
 byId("checkTwos").addEventListener("click", () => checkTwos(true));

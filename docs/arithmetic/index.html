@@ -199,18 +199,26 @@
         <div class="workspace-main">
           <section class="panel" id="representationPanel">
             <div class="panel-header">
-              <h2>Represent the operands</h2>
+              <h2><span class="stage-number">1</span>Represent the operands</h2>
               <button type="button" class="quiet" id="copyProblem">Copy problem</button>
             </div>
             <div class="representation-grid" id="operandRepresentations"></div>
             <div class="table-scroll" style="margin-top: 14px">
               <div id="operandBits"></div>
             </div>
+            <p class="table-note">
+              Enter one bit in every position, including leading zeros.
+            </p>
+            <div class="step-actions">
+              <button type="button" id="checkRepresentation">Check operand bits</button>
+              <button type="button" class="quiet guided-only" id="representationHint">Hint</button>
+            </div>
+            <div class="feedback" id="representationFeedback" aria-live="polite"></div>
           </section>
 
           <section class="panel" id="predictionStage">
             <div class="panel-header">
-              <h2><span class="stage-number">1</span>Predict the mathematics</h2>
+              <h2><span class="stage-number">2</span>Predict the mathematics</h2>
             </div>
             <p class="microcopy" style="margin-bottom: 16px">
               Ignore the register width for a moment. What does ordinary
@@ -240,7 +248,7 @@
 
           <section class="panel" id="mechanicsStage">
             <div class="panel-header">
-              <h2><span class="stage-number">2</span>Perform the bit mechanics</h2>
+              <h2><span class="stage-number">3</span>Perform the bit mechanics</h2>
             </div>
 
             <div id="twosPreparation" hidden>
@@ -256,23 +264,27 @@
               <div class="feedback" id="twosFeedback" aria-live="polite"></div>
             </div>
 
-            <p class="microcopy" id="mechanicsInstruction" style="margin-bottom: 12px"></p>
-            <div class="table-scroll" id="mechanicsTable"></div>
-            <p class="table-note">
-              Work from bit 0 on the right toward the most-significant bit.
-              Enter the result and the carry or borrow leaving each column.
-            </p>
-            <div class="step-actions">
-              <button type="button" id="checkMechanics">Check my columns</button>
-              <button type="button" class="quiet guided-only" id="mechanicsHint">Hint</button>
-              <button type="button" class="quiet guided-only" id="revealNext">Reveal first missing step</button>
+            <div id="bitMechanicsWork">
+              <p class="microcopy" id="mechanicsInstruction" style="margin-bottom: 12px"></p>
+              <div class="table-scroll" id="mechanicsTable"></div>
+              <p class="table-note">
+                Work from bit 0 on the right toward the most-significant bit.
+                Enter the result and the carry or borrow leaving each column;
+                that outgoing value appears automatically as the input to the
+                next column.
+              </p>
+              <div class="step-actions">
+                <button type="button" id="checkMechanics">Check my columns</button>
+                <button type="button" class="quiet guided-only" id="mechanicsHint">Hint</button>
+                <button type="button" class="quiet guided-only" id="revealNext">Reveal first missing step</button>
+              </div>
+              <div class="feedback" id="mechanicsFeedback" aria-live="polite"></div>
             </div>
-            <div class="feedback" id="mechanicsFeedback" aria-live="polite"></div>
           </section>
 
           <section class="panel" id="interpretationStage">
             <div class="panel-header">
-              <h2><span class="stage-number">3</span>Interpret the stored result</h2>
+              <h2><span class="stage-number">4</span>Interpret the stored result</h2>
             </div>
             <div class="field-row">
               <div class="field">
@@ -339,7 +351,7 @@
 
       <footer class="footer">
         <span>CEC220 · Fixed-Width Arithmetic Workbench</span>
-        <span>Nothing is hidden: width, bit pattern, value, and flags stay separate.</span>
+        <span>Width, bit pattern, value, and flags are checked separately.</span>
       </footer>
     </main>
 
