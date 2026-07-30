@@ -742,7 +742,12 @@ function checkMechanics(showFeedback = true) {
       `Every column is correct. Reading the result from the most-significant bit gives ${current.resultBits}.`,
     );
   }
-  byId("interpretationStage").hidden = false;
+  if (requiresInterpretationStage()) {
+    byId("interpretationStage").hidden = false;
+  } else {
+    byId("interpretationStage").hidden = true;
+    showFoundationResult();
+  }
   return true;
 }
 
@@ -866,6 +871,24 @@ function summaryItem(label, value) {
   `;
 }
 
+function requiresInterpretationStage() {
+  return current.interpretation === "signed" || !current.fits;
+}
+
+function showFoundationResult() {
+  const operator = current.operation === "add" ? "+" : "−";
+  byId("resultEquation").textContent =
+    `${current.aValue} ${operator} ${current.bValue} = ${current.mathematicalResult} = ${current.resultBits}₂`;
+  byId("resultSummary").innerHTML = [
+    summaryItem("Decimal result", current.mathematicalResult),
+    summaryItem(`${current.width}-bit binary result`, `${current.resultBits}₂`),
+  ].join("");
+  byId("resultExplanation").textContent =
+    `The result fits in the ${current.width}-bit unsigned range. The bit-by-bit arithmetic is complete.`;
+  byId("resultBanner").classList.add("visible");
+  byId("resultBanner").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
 function showVerifiedResult() {
   const operator = current.operation === "add" ? "+" : "−";
   const stored = expectedSelectedValue();
@@ -910,6 +933,7 @@ function checkAll() {
   if (!checkPrediction(true)) return;
   if (!checkTwos(true)) return;
   if (!checkMechanics(true)) return;
+  if (!requiresInterpretationStage()) return;
   if (!checkInterpretation(true)) return;
   showVerifiedResult();
 }
