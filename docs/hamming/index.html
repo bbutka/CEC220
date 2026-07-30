@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="A guided CEC220 Hamming-code explorer for parity placement, syndrome decoding, correction, and minimum distance."
+    >
+    <title>Hamming Codes · CEC220 Logic Studio</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+  </head>
+  <body class="tool-page">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="../">
+          <span class="brand-mark" aria-hidden="true">01</span>
+          <span>CEC220 Logic Studio</span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+          <a href="../#pathway">Course pathway</a>
+          <a href="../#tool-library">All tools</a>
+          <a href="./" aria-current="page">Hamming codes</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page">
+      <div class="breadcrumb"><a href="../">Logic Studio</a> / Hamming Codes</div>
+      <section class="tool-intro">
+        <div>
+          <p class="eyebrow">Workbench 04 · Information and reliability</p>
+          <h1>Hamming Codes</h1>
+          <p class="lede">
+            Place parity bits, predict their values, inject one error, and let
+            the syndrome identify its position.
+          </p>
+        </div>
+      </section>
+
+      <div class="workspace">
+        <aside class="workspace-sidebar">
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Data word</h2>
+            </div>
+            <div class="field">
+              <label for="dataBits">Binary data, 1–11 bits</label>
+              <input class="mono-input" id="dataBits" value="1011" maxlength="11">
+            </div>
+            <div class="step-actions">
+              <button type="button" id="buildCode">Place data bits</button>
+              <button type="button" class="secondary" id="randomCode">Random data</button>
+            </div>
+            <div class="error-box" id="hammingError" role="alert"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <h3>Even-parity convention</h3>
+            </div>
+            <div class="callout">
+              <strong>Parity positions are powers of two.</strong>
+              Position 1 checks every position whose binary index ends in 1;
+              position 2 checks indexes with the next bit set, and so on.
+            </div>
+          </section>
+        </aside>
+
+        <div class="workspace-main">
+          <section class="panel">
+            <div class="panel-header">
+              <h2><span class="stage-number">1</span>Place and calculate parity</h2>
+            </div>
+            <div class="position-grid" id="positionGrid"></div>
+            <div class="step-actions">
+              <button type="button" id="checkParity">Check parity bits</button>
+              <button type="button" class="quiet" id="parityHint">Show parity groups</button>
+            </div>
+            <div class="feedback" id="parityFeedback" aria-live="polite"></div>
+            <div class="result-banner" id="codewordBanner" style="margin-top: 16px">
+              <p class="eyebrow">Encoded word · highest position on the left</p>
+              <div class="result-equation" id="encodedWord"></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <h2><span class="stage-number">2</span>Inject, locate, and correct an error</h2>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="errorPosition">Flip codeword position</label>
+                <select id="errorPosition"></select>
+              </div>
+              <div class="field">
+                <label for="syndromeAnswer">Predicted syndrome, decimal</label>
+                <input class="mono-input" id="syndromeAnswer" inputmode="numeric">
+              </div>
+            </div>
+            <div class="step-actions">
+              <button type="button" id="injectError">Inject selected error</button>
+              <button type="button" class="secondary" id="checkSyndrome">Check and correct</button>
+            </div>
+            <div class="representation-grid" id="errorRepresentations" style="margin-top: 16px"></div>
+            <div class="feedback" id="syndromeFeedback" aria-live="polite"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <h2><span class="stage-number">3</span>Connect distance to capability</h2>
+            </div>
+            <div class="field">
+              <label for="codewordSet">Codewords, one per line</label>
+              <textarea class="code-block" id="codewordSet" spellcheck="false">0000000
+1010101
+0110011
+1100110</textarea>
+            </div>
+            <button type="button" id="calculateDistance">Calculate minimum distance</button>
+            <div class="feedback" id="distanceFeedback" aria-live="polite"></div>
+            <div class="summary-grid" id="distanceSummary" style="margin-top: 14px"></div>
+          </section>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <span>CEC220 · Hamming-Code Explorer</span>
+        <span>Distance predicts capability; syndrome locates the single-bit error.</span>
+      </footer>
+    </main>
+
+    <script type="module" src="./hamming.js"></script>
+  </body>
+</html>
+

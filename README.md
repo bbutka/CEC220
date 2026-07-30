@@ -15,6 +15,18 @@ workbench covers fixed-width arithmetic:
 - Learn, Practice, and Verify modes; and
 - shareable instructor problem links.
 
+The State-Machine Design Workbench continues from behavioral rules through a
+complete transition table, editable state encoding, minimized DFF/output
+equations, and exhaustive row-by-row verification. It accepts CSV formatted by
+ChatGPT or a spreadsheet so table entry does not dominate the exercise.
+
+The Register-Transfer Algorithm Explorer connects that controller model to
+shift-and-add multiplication and non-restoring division. Students predict each
+control action and register update before advancing the clock.
+
+The Hamming-Code Explorer combines the two error-correction notebooks into one
+guided parity, syndrome, correction, and minimum-distance activity.
+
 The original Colab notebooks remain in the repository as reference
 implementations and editable demonstrations.
 

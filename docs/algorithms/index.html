@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="A guided CEC220 register-transfer explorer for shift-and-add multiplication and non-restoring division."
+    >
+    <title>Register-Transfer Algorithms · CEC220 Logic Studio</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+  </head>
+  <body class="tool-page">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="../">
+          <span class="brand-mark" aria-hidden="true">01</span>
+          <span>CEC220 Logic Studio</span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+          <a href="../#pathway">Course pathway</a>
+          <a href="../#tool-library">All tools</a>
+          <a href="./" aria-current="page">Algorithms</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page">
+      <div class="breadcrumb"><a href="../">Logic Studio</a> / Register-Transfer Algorithms</div>
+      <section class="tool-intro">
+        <div>
+          <p class="eyebrow">Workbench 03 · Datapath and control</p>
+          <h1>Register-Transfer Algorithms</h1>
+          <p class="lede">
+            Treat multiplication and division as a controller repeatedly
+            testing a condition and commanding registers, shifts, and an adder.
+          </p>
+        </div>
+      </section>
+
+      <div class="workspace">
+        <aside class="workspace-sidebar">
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Algorithm setup</h2>
+            </div>
+            <fieldset class="field">
+              <legend>Algorithm</legend>
+              <div class="inline-options">
+                <label class="radio-chip">
+                  <input type="radio" name="algorithm" value="multiply" checked>
+                  <span>Shift-and-add</span>
+                </label>
+                <label class="radio-chip">
+                  <input type="radio" name="algorithm" value="divide">
+                  <span>Non-restoring divide</span>
+                </label>
+              </div>
+            </fieldset>
+            <div class="field">
+              <label for="algorithmWidth">Operand width</label>
+              <select id="algorithmWidth">
+                <option value="4" selected>4 bits</option>
+                <option value="5">5 bits</option>
+                <option value="6">6 bits</option>
+                <option value="8">8 bits</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="algorithmA" id="algorithmALabel">Multiplicand M</label>
+              <input class="mono-input" id="algorithmA" value="7" inputmode="numeric">
+            </div>
+            <div class="field">
+              <label for="algorithmB" id="algorithmBLabel">Multiplier Q</label>
+              <input class="mono-input" id="algorithmB" value="5" inputmode="numeric">
+            </div>
+            <div class="step-actions">
+              <button type="button" id="loadAlgorithm">Load algorithm</button>
+              <button type="button" class="secondary" id="randomAlgorithm">Random problem</button>
+            </div>
+            <div class="error-box" id="algorithmError" role="alert"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <h3>Controller connection</h3>
+            </div>
+            <div class="callout" id="controllerCallout">
+              <strong>One repeated control decision</strong>
+              Test Q₀. If it is 1, enable the product-register add. Then shift
+              the multiplicand left and multiplier right.
+            </div>
+          </section>
+        </aside>
+
+        <div class="workspace-main">
+          <section class="panel">
+            <div class="panel-header">
+              <h2><span class="stage-number">1</span>Current datapath state</h2>
+              <span class="tool-status live" id="cycleBadge">Cycle 0 of 4</span>
+            </div>
+            <div class="register-rack" id="registerRack"></div>
+            <div class="decision-box" id="decisionBox">
+              <p class="question" id="decisionQuestion"></p>
+              <div class="field-row">
+                <div class="field">
+                  <label for="actionPrediction">Controller action</label>
+                  <select id="actionPrediction"></select>
+                </div>
+                <div class="field">
+                  <label for="primaryPrediction" id="primaryPredictionLabel">Next product register</label>
+                  <input class="mono-input" id="primaryPrediction" autocomplete="off">
+                </div>
+              </div>
+              <div class="field">
+                <label for="secondaryPrediction" id="secondaryPredictionLabel">Next Q register</label>
+                <input class="mono-input" id="secondaryPrediction" autocomplete="off">
+              </div>
+              <div class="step-actions">
+                <button type="button" id="checkAlgorithmStep">Check this clock</button>
+                <button type="button" class="quiet" id="revealAlgorithmStep">Reveal this clock</button>
+                <button type="button" class="secondary" id="advanceAlgorithm" disabled>Advance clock</button>
+              </div>
+              <div class="feedback" id="algorithmFeedback" aria-live="polite"></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <h2><span class="stage-number">2</span>Register trace</h2>
+              <button type="button" class="quiet" id="runToEnd">Instructor: run to end</button>
+            </div>
+            <div class="table-scroll" id="algorithmTrace"></div>
+            <p class="table-note" id="traceNote"></p>
+          </section>
+
+          <section class="result-banner" id="algorithmResult" aria-live="polite">
+            <p class="eyebrow">Algorithm verified</p>
+            <div class="result-equation" id="algorithmEquation"></div>
+            <div class="summary-grid" id="algorithmSummary"></div>
+            <p class="result-explanation" id="algorithmExplanation"></p>
+          </section>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <span>CEC220 · Register-Transfer Algorithm Explorer</span>
+        <span>Condition → control signal → register operation → next clock</span>
+      </footer>
+    </main>
+
+    <script type="module" src="./algorithms.js"></script>
+  </body>
+</html>
+

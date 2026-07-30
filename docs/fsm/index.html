@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="A guided CEC220 state-machine workbench from behavioral specification through verified DFF equations."
+    >
+    <title>State-Machine Design · CEC220 Logic Studio</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+  </head>
+  <body class="tool-page">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="../">
+          <span class="brand-mark" aria-hidden="true">01</span>
+          <span>CEC220 Logic Studio</span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+          <a href="../#pathway">Course pathway</a>
+          <a href="../#tool-library">All tools</a>
+          <a href="./" aria-current="page">State machines</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page">
+      <div class="breadcrumb"><a href="../">Logic Studio</a> / State-Machine Design</div>
+      <section class="tool-intro">
+        <div>
+          <p class="eyebrow">Workbench 02 · State and control</p>
+          <h1>State-Machine Design</h1>
+          <p class="lede">
+            Start with behavior, account for every transition, choose an
+            encoding, and finish with equations that are exhaustively checked.
+          </p>
+        </div>
+      </section>
+
+      <div class="mode-note">
+        The tool automates table expansion and algebra. Students remain
+        responsible for the behavioral specification, representative rows,
+        encoding choice, and interpretation of any counterexample.
+      </div>
+
+      <div class="workspace">
+        <aside class="workspace-sidebar">
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Machine vocabulary</h2>
+            </div>
+            <div class="field">
+              <label for="states">States, comma separated</label>
+              <input id="states" value="IDLE, LOAD, RUN, DONE">
+            </div>
+            <div class="field">
+              <label for="inputs">Inputs, comma separated</label>
+              <input id="inputs" value="start, zero">
+            </div>
+            <div class="field">
+              <label for="outputs">Outputs, comma separated</label>
+              <input id="outputs" value="load, shift, done">
+            </div>
+            <div class="field">
+              <label for="outputModel">Output model</label>
+              <select id="outputModel">
+                <option value="moore" selected>Moore · state only</option>
+                <option value="mealy">Mealy · state and inputs</option>
+              </select>
+            </div>
+            <div class="step-actions">
+              <button type="button" id="loadExample">Load controller example</button>
+              <button type="button" class="secondary" id="buildBlank">Build blank table</button>
+            </div>
+            <div class="error-box" id="specError" role="alert"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <h3>Use ChatGPT for formatting</h3>
+            </div>
+            <p class="microcopy">
+              Ask AI to expand prose into CSV, then paste it here. The workbench
+              will independently check completeness and derive the equations.
+            </p>
+            <div class="step-actions">
+              <button type="button" class="secondary" id="copyAiPrompt">Copy constrained prompt</button>
+            </div>
+            <div class="feedback" id="promptFeedback" aria-live="polite"></div>
+          </section>
+        </aside>
+
+        <div class="workspace-main">
+          <section class="panel">
+            <div class="panel-header">
+              <h2><span class="stage-number">1</span>Complete transition table</h2>
+              <button type="button" class="quiet" id="copyCsv">Copy table as CSV</button>
+            </div>
+            <div class="table-scroll" id="transitionTable"></div>
+            <div class="step-actions">
+              <button type="button" id="checkTable">Check completeness</button>
+            </div>
+            <div class="feedback" id="tableFeedback" aria-live="polite"></div>
+
+            <details style="margin-top: 18px">
+              <summary>Paste a transition table from ChatGPT or a spreadsheet</summary>
+              <div class="field" style="margin-top: 12px">
+                <label for="csvInput">CSV with exact state, input, next_state, and output columns</label>
+                <textarea class="code-block" id="csvInput" spellcheck="false"></textarea>
+              </div>
+              <button type="button" class="secondary" id="importCsv">Import CSV</button>
+              <div class="feedback" id="csvFeedback" aria-live="polite"></div>
+            </details>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <h2><span class="stage-number">2</span>Choose state encoding</h2>
+            </div>
+            <p class="microcopy" style="margin-bottom: 14px">
+              Binary encoding is supplied as a starting point. Change it if a
+              different assignment better exposes the implementation.
+            </p>
+            <div class="table-scroll" id="encodingTable"></div>
+            <div class="step-actions">
+              <button type="button" id="deriveEquations">Derive and verify equations</button>
+            </div>
+            <div class="feedback" id="encodingFeedback" aria-live="polite"></div>
+          </section>
+
+          <section class="panel" id="equationStage">
+            <div class="panel-header">
+              <h2><span class="stage-number">3</span>Final DFF and output equations</h2>
+              <button type="button" class="quiet" id="copyEquations" disabled>Copy equations</button>
+            </div>
+            <div class="callout" style="margin-bottom: 16px">
+              <strong>Required student checkpoint</strong>
+              Derive one D-input equation manually, then compare its minterms and
+              simplified form with the generated equation below.
+            </div>
+            <div class="equation-list" id="equationList">
+              <div class="microcopy">Complete and validate the transition table first.</div>
+            </div>
+            <div id="verificationResult"></div>
+          </section>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <span>CEC220 · State-Machine Design Workbench</span>
+        <span>Specification → table → encoding → equations → exhaustive verification</span>
+      </footer>
+    </main>
+
+    <script type="module" src="./fsm.js"></script>
+  </body>
+</html>
