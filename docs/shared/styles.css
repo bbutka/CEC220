@@ -1011,7 +1011,7 @@ fieldset {
   white-space: nowrap;
 }
 
-.mechanics-table .regrouped-row td {
+.mechanics-table td.regrouped-active {
   border-color: rgba(255, 224, 130, 0.28);
   background: rgba(255, 224, 130, 0.05);
   color: var(--yellow);
@@ -1020,13 +1020,13 @@ fieldset {
   font-weight: 780;
 }
 
-.mechanics-table .regrouped-row td:first-child {
+.mechanics-table td:first-child.regrouped-active {
   color: var(--yellow);
   font-family: inherit;
   font-size: 0.74rem;
 }
 
-.mechanics-table .regrouped-row td.needs-loan {
+.mechanics-table td.regrouped-active.needs-loan {
   border-color: rgba(255, 123, 123, 0.48);
   background: var(--red-soft);
   color: var(--red);

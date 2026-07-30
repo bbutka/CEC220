@@ -610,10 +610,6 @@ function renderMechanics() {
     ? `
         <tr><td>${flowInName}</td>${flowInCells}</tr>
         <tr><td>${flowName}</td>${flowInputs}</tr>
-        <tr class="regrouped-row">
-          <td>A after regrouping</td>
-          ${positions.map((position) => `<td data-regrouped-position="${position}"></td>`).join("")}
-        </tr>
         <tr><td>result bit</td>${resultInputs}</tr>
       `
     : `
@@ -626,7 +622,14 @@ function renderMechanics() {
     <table class="mechanics-table" aria-label="Bit-by-bit arithmetic">
       <thead><tr><th>bit position</th>${positions.map((position) => `<th>${position}</th>`).join("")}</tr></thead>
       <tbody>
-        <tr><td>A</td>${[...aBits].map((bit) => `<td class="operand">${bit}</td>`).join("")}</tr>
+        <tr>
+          <td data-a-row-label>A</td>
+          ${
+            borrowMethod
+              ? positions.map((position) => `<td class="operand" data-regrouped-position="${position}">${aBits[current.width - 1 - position]}</td>`).join("")
+              : [...aBits].map((bit) => `<td class="operand">${bit}</td>`).join("")
+          }
+        </tr>
         <tr><td>${twosMethod ? "~B" : "B"}</td>${[...secondBits].map((bit) => `<td class="operand">${bit}</td>`).join("")}</tr>
         ${workRows}
       </tbody>
@@ -715,12 +718,22 @@ function regroupedColumn(position) {
 }
 
 function updateRegroupedMinuend() {
+  const hasLoan = all('[data-mechanics-kind="flow"]').some(
+    (input) => input.value.trim() === "1",
+  );
+  const rowLabel = document.querySelector("[data-a-row-label]");
+  if (rowLabel) {
+    rowLabel.textContent = hasLoan ? "A (regrouped)" : "A";
+    rowLabel.classList.toggle("regrouped-active", hasLoan);
+  }
+
   for (let position = 0; position < current.width; position += 1) {
     const target = document.querySelector(
       `[data-regrouped-position="${position}"]`,
     );
     if (!target) continue;
     const regrouped = regroupedColumn(position);
+    target.classList.toggle("regrouped-active", hasLoan);
     target.classList.toggle("needs-loan", regrouped.needsLoan);
     target.classList.toggle("temporary-two", regrouped.value === 2);
     if (regrouped.needsLoan) {
@@ -763,7 +776,9 @@ function updateBorrowProcess() {
   });
   const propagatedPositions = all(
     '[data-mechanics-kind="flow"][data-auto-borrow="true"]',
-  ).map((input) => input.dataset.position);
+  )
+    .map((input) => Number(input.dataset.position))
+    .sort((a, b) => a - b);
 
   guide.innerHTML = `
     <div class="borrow-process-title">Borrow process</div>
