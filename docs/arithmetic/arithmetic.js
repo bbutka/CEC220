@@ -307,8 +307,6 @@ function formatPrimaryValue(raw) {
 }
 
 function renderRepresentations() {
-  const a = representation(current.rawA, current.width);
-  const b = representation(current.rawB, current.width);
   const range = rangeFor(current.width, current.interpretation);
   const operator = current.operation === "add" ? "+" : "−";
 
@@ -330,55 +328,97 @@ function renderRepresentations() {
     </div>
   `;
 
-  const headings = Array.from(
-    { length: current.width },
-    (_, index) => current.width - 1 - index,
-  );
-  const bitInputs = (kind) =>
-    headings
-      .map(
-        (position, index) =>
-          `<td class="${index === 0 && current.interpretation === "signed" ? "sign" : ""}">
-            <input
-              aria-label="Operand ${kind} bit ${position}"
-              inputmode="numeric"
-              maxlength="1"
-              data-operand-kind="${kind}"
-              data-position="${position}"
-            >
-          </td>`,
-      )
-      .join("");
+  const binaryEntry = (kind) => `
+    <div class="binary-entry-card">
+      <label for="operandBinary${kind}">
+        Operand ${kind} as one ${current.width}-bit binary number
+      </label>
+      <div class="binary-entry-shell" data-binary-shell="${kind}">
+        <input
+          class="binary-entry-input"
+          id="operandBinary${kind}"
+          aria-describedby="operandBinary${kind}Progress"
+          aria-label="Operand ${kind} as a ${current.width}-bit binary number"
+          inputmode="numeric"
+          autocomplete="off"
+          maxlength="${current.width}"
+          data-operand-kind="${kind}"
+        >
+        <div class="binary-entry-display" data-binary-display="${kind}" aria-hidden="true"></div>
+      </div>
+      <div class="binary-entry-position" aria-hidden="true">
+        <span>MSB</span>
+        <span>LSB</span>
+      </div>
+      <div class="microcopy" id="operandBinary${kind}Progress">
+        0 of ${current.width} bits entered
+      </div>
+    </div>
+  `;
 
   byId("operandBits").innerHTML = `
-    <table class="mechanics-table" aria-label="Enter operand bit patterns">
-      <thead><tr><th>bit position</th>${headings.map((value) => `<th>${value}</th>`).join("")}</tr></thead>
-      <tbody>
-        <tr><td>A</td>${bitInputs("A")}</tr>
-        <tr><td>B</td>${bitInputs("B")}</tr>
-      </tbody>
-    </table>
+    <div class="binary-entry-grid" aria-label="Enter operand bit patterns">
+      ${binaryEntry("A")}
+      ${binaryEntry("B")}
+    </div>
   `;
+  for (const input of operandInputsInOrder()) renderOperandEntry(input);
 }
 
-function expectedOperandBit(input) {
-  const position = Number(input.dataset.position);
-  const bits =
-    input.dataset.operandKind === "A"
-      ? bitsFor(current.rawA, current.width)
-      : bitsFor(current.rawB, current.width);
-  return bits[current.width - 1 - position];
+function expectedOperandBits(input) {
+  return input.dataset.operandKind === "A"
+    ? bitsFor(current.rawA, current.width)
+    : bitsFor(current.rawB, current.width);
 }
 
 function operandInputsInOrder() {
-  return ["A", "B"].flatMap((kind) =>
-    Array.from({ length: current.width }, (_, index) => current.width - 1 - index)
-      .map((position) =>
-        document.querySelector(
-          `[data-operand-kind="${kind}"][data-position="${position}"]`,
-        ),
-      ),
+  return ["A", "B"].map((kind) =>
+    document.querySelector(`[data-operand-kind="${kind}"]`),
   );
+}
+
+function renderOperandEntry(input) {
+  const kind = input.dataset.operandKind;
+  const expected = expectedOperandBits(input);
+  const display = document.querySelector(`[data-binary-display="${kind}"]`);
+  const shell = document.querySelector(`[data-binary-shell="${kind}"]`);
+  const progress = byId(`operandBinary${kind}Progress`);
+  const entered = input.value;
+
+  display.innerHTML = Array.from(
+    { length: current.width },
+    (_, index) => {
+      const digit = entered[index];
+      if (digit === undefined) {
+        return '<span class="pending">·</span>';
+      }
+      const state = digit === expected[index] ? "correct" : "incorrect";
+      return `<span class="${state}">${digit}</span>`;
+    },
+  ).join("");
+
+  const hasError = [...entered].some(
+    (digit, index) => digit !== expected[index],
+  );
+  const isComplete = entered.length === current.width;
+  const isCorrect = isComplete && entered === expected;
+  shell.classList.toggle("has-error", hasError);
+  shell.classList.toggle("is-correct", isCorrect);
+  progress.textContent = isCorrect
+    ? `All ${current.width} bits are correct`
+    : `${entered.length} of ${current.width} bits entered`;
+}
+
+function resetAfterRepresentationEdit() {
+  byId("repAMeta").textContent =
+    `Convert A to ${current.width}-bit binary below.`;
+  byId("repBMeta").textContent =
+    `Convert B to ${current.width}-bit binary below.`;
+  byId("predictionStage").hidden = true;
+  byId("mechanicsStage").hidden = true;
+  byId("interpretationStage").hidden = true;
+  byId("resultBanner").classList.remove("visible");
+  clearFeedback("representationFeedback");
 }
 
 function showRepresentationConfirmation() {
@@ -391,7 +431,8 @@ function showRepresentationConfirmation() {
 function checkRepresentation(showFeedback = true) {
   let firstWrong = null;
   for (const input of operandInputsInOrder()) {
-    const correct = validateBitInput(input, expectedOperandBit(input));
+    renderOperandEntry(input);
+    const correct = input.value === expectedOperandBits(input);
     if (!correct && !firstWrong) firstWrong = input;
   }
 
@@ -400,7 +441,7 @@ function checkRepresentation(showFeedback = true) {
       setFeedback(
         "representationFeedback",
         "error",
-        `The first incorrect or missing entry is operand ${firstWrong.dataset.operandKind}, bit ${firstWrong.dataset.position}.`,
+        `Operand ${firstWrong.dataset.operandKind} must be entered as one complete ${current.width}-bit binary number. Red digits do not match; include leading zeros.`,
       );
       firstWrong.focus();
     }
@@ -422,7 +463,7 @@ function checkRepresentation(showFeedback = true) {
 function representationHint() {
   hintCounts.representation += 1;
   const unresolved = operandInputsInOrder().find(
-    (input) => input.value.trim() !== expectedOperandBit(input),
+    (input) => input.value !== expectedOperandBits(input),
   );
   if (!unresolved) {
     setFeedback(
@@ -452,7 +493,13 @@ function representationHint() {
   }
 
   if (hintCounts.representation > 1) {
-    message += ` Focus next on bit ${unresolved.dataset.position}.`;
+    const expected = expectedOperandBits(unresolved);
+    const mismatch = [...unresolved.value].findIndex(
+      (digit, index) => digit !== expected[index],
+    );
+    const nextIndex = mismatch >= 0 ? mismatch : unresolved.value.length;
+    const position = current.width - 1 - nextIndex;
+    message += ` Focus next on bit ${Math.max(0, position)}.`;
   }
   setFeedback("representationFeedback", "hint", message);
 }
@@ -1064,6 +1111,14 @@ byId("loadProblem").addEventListener("click", loadProblem);
 byId("newPractice").addEventListener("click", newPracticeProblem);
 byId("practiceScope").addEventListener("change", newPracticeProblem);
 byId("copyProblem").addEventListener("click", copyProblem);
+byId("operandBits").addEventListener("input", (event) => {
+  const input = event.target.closest("[data-operand-kind]");
+  if (!input) return;
+  const sanitized = input.value.replace(/[^01]/g, "").slice(0, current.width);
+  if (input.value !== sanitized) input.value = sanitized;
+  renderOperandEntry(input);
+  resetAfterRepresentationEdit();
+});
 byId("checkRepresentation").addEventListener("click", () =>
   checkRepresentation(true),
 );

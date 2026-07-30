@@ -203,14 +203,15 @@
               <button type="button" class="quiet" id="copyProblem">Copy problem</button>
             </div>
             <div class="representation-grid" id="operandRepresentations"></div>
-            <div class="table-scroll" style="margin-top: 14px">
+            <div style="margin-top: 14px">
               <div id="operandBits"></div>
             </div>
             <p class="table-note">
-              Enter one bit in every position, including leading zeros.
+              Enter each operand as one fixed-width binary number, including
+              leading zeros. Each digit is checked as you type.
             </p>
             <div class="step-actions">
-              <button type="button" id="checkRepresentation">Check operand bits</button>
+              <button type="button" id="checkRepresentation">Check binary numbers</button>
               <button type="button" class="quiet guided-only" id="representationHint">Hint</button>
             </div>
             <div class="feedback" id="representationFeedback" aria-live="polite"></div>
