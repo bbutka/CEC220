@@ -596,6 +596,20 @@ fieldset {
   gap: 7px;
 }
 
+.preset-group-label {
+  margin: 9px 2px 1px;
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.preset-group-label:first-child {
+  margin-top: 0;
+}
+
 .preset-button {
   width: 100%;
   min-height: 0;

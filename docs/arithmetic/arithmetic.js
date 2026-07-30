@@ -10,6 +10,42 @@ const byId = (id) => document.getElementById(id);
 const all = (selector) => [...document.querySelectorAll(selector)];
 
 const presets = {
+  "unsigned-carry-chain": {
+    width: 5,
+    base: 10,
+    interpretation: "unsigned",
+    operation: "add",
+    subtractionMethod: "borrow",
+    a: "11",
+    b: "6",
+    calloutTitle: "Start with the mechanics students already use.",
+    callout:
+      "Add from the least-significant column. A column total of 2 or 3 writes one result bit and carries 1 into the next position—the same positional rule used for time and decimal arithmetic.",
+  },
+  "unsigned-borrow-chain": {
+    width: 4,
+    base: 10,
+    interpretation: "unsigned",
+    operation: "subtract",
+    subtractionMethod: "borrow",
+    a: "10",
+    b: "6",
+    calloutTitle: "Borrowing is regrouping by the current base.",
+    callout:
+      "When a binary column is too small, borrow 1 from the next position. That borrowed 1 has a value of 2 in the current column, just as a borrowed ten contributes 10 in decimal.",
+  },
+  "unsigned-overflow": {
+    width: 4,
+    base: 10,
+    interpretation: "unsigned",
+    operation: "add",
+    subtractionMethod: "borrow",
+    a: "15",
+    b: "1",
+    calloutTitle: "The carry can require another bit.",
+    callout:
+      "The mathematical result is 10000₂. A four-bit register retains 0000 and reports carry-out, demonstrating why width belongs in every arithmetic problem.",
+  },
   "ten-minus-fifteen": {
     width: 5,
     base: 10,
@@ -45,6 +81,18 @@ const presets = {
     calloutTitle: "A register wraps; a flag preserves the warning.",
     callout:
       "Four unsigned bits cannot represent −1. The stored pattern wraps to 1111 while borrow-out and unsigned underflow report that the mathematical answer did not fit.",
+  },
+  "signed-minus-one": {
+    width: 4,
+    base: 10,
+    interpretation: "signed",
+    operation: "subtract",
+    subtractionMethod: "twos",
+    a: "0",
+    b: "1",
+    calloutTitle: "The mechanics stay the same; the interpretation changes.",
+    callout:
+      "Four-bit subtraction produces 1111. Lecture 1.4 treats that pattern as unsigned 15; Lecture 1.5 gives it the two’s-complement meaning −1.",
   },
   "negative-overflow": {
     width: 4,
@@ -172,7 +220,13 @@ function randomRaw(width) {
 function newPracticeProblem() {
   const widths = [4, 5, 6, 8];
   const width = widths[Math.floor(Math.random() * widths.length)];
-  const interpretation = Math.random() < 0.6 ? "signed" : "unsigned";
+  const scope = byId("practiceScope").value;
+  const interpretation =
+    scope === "mixed"
+      ? Math.random() < 0.5
+        ? "signed"
+        : "unsigned"
+      : scope;
   const operation = Math.random() < 0.5 ? "add" : "subtract";
   const subtractionMethod = Math.random() < 0.5 ? "borrow" : "twos";
   const rawA = randomRaw(width);
@@ -771,6 +825,7 @@ function switchMode(mode) {
     button.setAttribute("aria-pressed", String(active));
   });
   byId("newPractice").hidden = mode !== "practice";
+  byId("practiceScopeField").hidden = mode !== "practice";
 
   if (mode === "practice") {
     newPracticeProblem();
@@ -843,6 +898,7 @@ all('input[name="operation"]').forEach((input) => {
 
 byId("loadProblem").addEventListener("click", loadProblem);
 byId("newPractice").addEventListener("click", newPracticeProblem);
+byId("practiceScope").addEventListener("change", newPracticeProblem);
 byId("copyProblem").addEventListener("click", copyProblem);
 byId("checkPrediction").addEventListener("click", () => checkPrediction(true));
 byId("predictionHint").addEventListener("click", predictionHint);
@@ -858,4 +914,5 @@ byId("interpretationHint").addEventListener("click", interpretationHint);
 byId("checkAll").addEventListener("click", checkAll);
 
 loadQueryProblem();
+updateSubtractionControls();
 loadProblem();

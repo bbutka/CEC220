@@ -33,8 +33,8 @@
           <p class="eyebrow">Workbench 01 · Bits and representations</p>
           <h1>Fixed-Width Arithmetic</h1>
           <p class="lede">
-            Commit to a prediction, work from the least-significant bit, and
-            distinguish the stored pattern from the mathematical answer.
+            Begin with unsigned place value, carries, and borrows. Then reuse
+            those mechanics to understand two’s complement and signed overflow.
           </p>
         </div>
         <div class="mode-switcher" role="group" aria-label="Learning mode">
@@ -58,22 +58,45 @@
             <div class="field learn-only">
               <label>Concept example</label>
               <div class="preset-list" id="presetList">
-                <button class="preset-button active" type="button" data-preset="ten-minus-fifteen">
-                  10 − 15: where does −5 come from?
+                <div class="preset-group-label">Unsigned foundations · Lecture 1.4</div>
+                <button class="preset-button active" type="button" data-preset="unsigned-carry-chain">
+                  11 + 6: follow the carry chain
                 </button>
-                <button class="preset-button" type="button" data-preset="signed-overflow">
-                  7 + 1: signed overflow
+                <button class="preset-button" type="button" data-preset="unsigned-borrow-chain">
+                  10 − 6: follow the borrow chain
+                </button>
+                <button class="preset-button" type="button" data-preset="unsigned-overflow">
+                  15 + 1: carry beyond four bits
                 </button>
                 <button class="preset-button" type="button" data-preset="unsigned-underflow">
                   0 − 1: unsigned underflow
                 </button>
-                <button class="preset-button" type="button" data-preset="negative-overflow">
-                  −8 − 1: negative overflow
-                </button>
                 <button class="preset-button" type="button" data-preset="hex-carry">
                   AF + 3D: hexadecimal carry
                 </button>
+                <div class="preset-group-label">Signed extension · Lecture 1.5</div>
+                <button class="preset-button" type="button" data-preset="signed-minus-one">
+                  0 − 1: the same bits now mean −1
+                </button>
+                <button class="preset-button" type="button" data-preset="signed-overflow">
+                  7 + 1: signed overflow
+                </button>
+                <button class="preset-button" type="button" data-preset="ten-minus-fifteen">
+                  10 − 15: produce −5 mechanically
+                </button>
+                <button class="preset-button" type="button" data-preset="negative-overflow">
+                  −8 − 1: negative overflow
+                </button>
               </div>
+            </div>
+
+            <div class="field" id="practiceScopeField" hidden>
+              <label for="practiceScope">Practice sequence</label>
+              <select id="practiceScope">
+                <option value="unsigned" selected>Unsigned foundations</option>
+                <option value="signed">Signed and two’s complement</option>
+                <option value="mixed">Mixed review</option>
+              </select>
             </div>
 
             <div class="field-row">
@@ -102,11 +125,11 @@
               <legend>Interpret the operands as</legend>
               <div class="inline-options">
                 <label class="radio-chip">
-                  <input type="radio" name="interpretation" value="signed" checked>
+                  <input type="radio" name="interpretation" value="signed">
                   <span>Signed</span>
                 </label>
                 <label class="radio-chip">
-                  <input type="radio" name="interpretation" value="unsigned">
+                  <input type="radio" name="interpretation" value="unsigned" checked>
                   <span>Unsigned</span>
                 </label>
               </div>
@@ -116,11 +139,11 @@
               <legend>Operation</legend>
               <div class="inline-options">
                 <label class="radio-chip">
-                  <input type="radio" name="operation" value="add">
+                  <input type="radio" name="operation" value="add" checked>
                   <span>Add</span>
                 </label>
                 <label class="radio-chip">
-                  <input type="radio" name="operation" value="subtract" checked>
+                  <input type="radio" name="operation" value="subtract">
                   <span>Subtract</span>
                 </label>
               </div>
@@ -143,11 +166,11 @@
             <div class="field-row">
               <div class="field">
                 <label for="operandA">Operand A</label>
-                <input class="mono-input" id="operandA" value="10" autocomplete="off">
+                <input class="mono-input" id="operandA" value="11" autocomplete="off">
               </div>
               <div class="field">
                 <label for="operandB">Operand B</label>
-                <input class="mono-input" id="operandB" value="15" autocomplete="off">
+                <input class="mono-input" id="operandB" value="6" autocomplete="off">
               </div>
             </div>
 
@@ -165,11 +188,10 @@
               <h3>Why this example?</h3>
             </div>
             <div class="callout" id="conceptCallout">
-              <strong>Knowing −5 is not the same as producing −5.</strong>
-              First compare magnitudes: 10 is smaller than 15, so the
-              mathematical result is negative. Fixed-width hardware instead
-              produces a bit pattern and flags; its interpretation supplies the
-              meaning.
+              <strong>Start with the mechanics students already use.</strong>
+              Add from the least-significant column. A column total of 2 or 3
+              writes one result bit and carries 1 into the next position—the
+              same positional rule used for time and decimal arithmetic.
             </div>
           </section>
         </aside>
