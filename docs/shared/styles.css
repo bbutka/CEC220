@@ -832,6 +832,32 @@ fieldset {
   font-size: 0.62rem;
 }
 
+.prediction-equation {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(82, 215, 208, 0.38);
+  border-radius: 10px;
+  background: var(--cyan-soft);
+}
+
+.prediction-equation .label {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 720;
+  text-transform: uppercase;
+}
+
+.prediction-equation .value {
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 1.45rem;
+  font-weight: 780;
+}
+
 .bit-strip {
   display: grid;
   grid-template-columns: repeat(var(--bit-count), minmax(42px, 1fr));
@@ -1378,6 +1404,12 @@ body[data-mode="verify"] .guided-only {
 
   .panel {
     padding: 17px;
+  }
+
+  .prediction-equation {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
   }
 }
 

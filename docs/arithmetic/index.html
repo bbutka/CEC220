@@ -226,13 +226,17 @@
               mathematics say, and can that value be represented in the selected
               format?
             </p>
+            <div class="prediction-equation" aria-label="Arithmetic to predict">
+              <span class="label">Ordinary arithmetic</span>
+              <span class="value" id="predictionExpression"></span>
+            </div>
             <div class="field-row">
               <div class="field">
                 <label for="predictionResult">Mathematical result</label>
                 <input class="mono-input" id="predictionResult" inputmode="numeric" autocomplete="off">
               </div>
               <div class="field">
-                <label for="predictionFits">Does it fit?</label>
+                <label for="predictionFits" id="predictionFitsLabel">Does it fit?</label>
                 <select id="predictionFits">
                   <option value="">Choose…</option>
                   <option value="yes">Yes</option>

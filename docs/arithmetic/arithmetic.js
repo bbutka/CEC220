@@ -309,6 +309,10 @@ function formatPrimaryValue(raw) {
 function renderRepresentations() {
   const range = rangeFor(current.width, current.interpretation);
   const operator = current.operation === "add" ? "+" : "−";
+  byId("predictionExpression").textContent =
+    `${current.aValue} ${operator} ${current.bValue} = ?`;
+  byId("predictionFitsLabel").textContent =
+    `Does it fit in ${current.width}-bit ${current.interpretation}?`;
 
   byId("operandRepresentations").innerHTML = `
     <div class="representation primary">
