@@ -131,6 +131,7 @@ const modeText = {
 
 let current = null;
 let currentMode = "learn";
+let borrowChoiceFeedback = null;
 let hintCounts = {
   representation: 0,
   prediction: 0,
@@ -654,18 +655,19 @@ function renderMechanics() {
     current.subtractionMethod === "twos";
   const borrowMethod = current.operation === "subtract" && !twosMethod;
   const flowName = borrowMethod ? "borrow from left" : "carry out";
-  const flowInName = borrowMethod ? "lent to right" : "carry in";
+  const flowInName = "carry in";
   const initialFlow = twosMethod ? 1 : 0;
 
   byId("mechanicsInstruction").textContent = twosMethod
     ? "Add A + ~B with an initial carry-in of 1 at bit 0. This is the hardware form of A − B."
     : borrowMethod
-      ? "Subtract B from A, starting at bit 0. If a column is negative, use the borrow button; A will regroup in place and the borrowed 1 will become 2 in the current column."
+      ? "Subtract B from A, starting at bit 0. If a column is negative, choose the higher bit that should supply the loan."
       : "Add A and B. A total of 2 or 3 writes a result bit and sends a carry of 1 to the next position.";
   byId("mechanicsFlowNote").textContent = borrowMethod
-    ? "Work from right to left. Use the borrow control only when the current subtraction is negative. The supplying column will show “1 lent to right,” and A will change to its regrouped column values."
+    ? "Work from right to left. Select the source of each borrow. A correct choice regroups A in place; an incorrect choice leaves A unchanged and explains why."
     : "Work from bit 0 on the right toward the most-significant bit. Enter the result and carry leaving each column; it appears automatically as the carry-in to the next column.";
   byId("borrowProcess").hidden = !borrowMethod;
+  borrowChoiceFeedback = null;
 
   const flowInCells = positions
     .map(
@@ -695,7 +697,6 @@ function renderMechanics() {
     .join("");
   const workRows = borrowMethod
     ? `
-        <tr><td>${flowInName}</td>${flowInCells}</tr>
         <tr><td>result bit</td>${resultInputs}</tr>
       `
     : `
@@ -834,6 +835,50 @@ function updateRegroupedMinuend() {
   }
 }
 
+function borrowSourceBit(targetPosition) {
+  let source = targetPosition + 1;
+  while (source < current.width) {
+    const sourceColumn = current.columns.find(
+      (column) => column.position === source,
+    );
+    if (sourceColumn?.borrowOut !== 1) return source;
+    source += 1;
+  }
+  return source;
+}
+
+function borrowChoiceMarkup(targetPosition) {
+  if (targetPosition === undefined) return "";
+  const bitChoices = Array.from(
+    { length: current.width - targetPosition - 1 },
+    (_, index) => targetPosition + 1 + index,
+  )
+    .map(
+      (source) =>
+        `<button type="button" class="borrow-source-choice" data-borrow-position="${targetPosition}" data-borrow-source="${source}">
+          Borrow from bit ${source}
+        </button>`,
+    )
+    .join("");
+  return `
+    <div class="borrow-question">
+      <strong>Bit ${targetPosition} needs a loan.</strong>
+      Which higher bit should supply it?
+    </div>
+    <div class="borrow-source-choices">
+      ${bitChoices}
+      <button type="button" class="borrow-source-choice quiet" data-borrow-position="${targetPosition}" data-borrow-source="${current.width}">
+        No source in register
+      </button>
+    </div>
+  `;
+}
+
+function borrowChoiceFeedbackMarkup() {
+  if (!borrowChoiceFeedback) return "";
+  return `<div class="borrow-choice-feedback ${borrowChoiceFeedback.type}" role="status">${borrowChoiceFeedback.message}</div>`;
+}
+
 function updateBorrowProcess() {
   const guide = byId("borrowProcess");
   if (!guide || guide.hidden) return;
@@ -847,26 +892,21 @@ function updateBorrowProcess() {
     );
     return column.borrowOut === 1 && input?.value.trim() !== "1";
   })?.position;
-  const borrowAction =
-    nextBorrowPosition === undefined
-      ? ""
-      : `<button type="button" class="borrow-action" data-borrow-position="${nextBorrowPosition}">
-          Regroup A: borrow into bit ${nextBorrowPosition}
-        </button>`;
+  const borrowAction = borrowChoiceMarkup(nextBorrowPosition);
 
   if (activeLoans.length === 0) {
     guide.innerHTML = `
-      <div class="borrow-process-title">How to show a borrow</div>
+      <div class="borrow-process-title">Choose the source of the borrow</div>
       <div class="borrow-process-prompt">
-        If <strong>A − B − any 1 already lent to the right</strong> is negative,
-        use the regrouping button. A will change in place and the matching loan
-        will appear in the supplying column automatically.
+        If the current column is negative, borrow from the nearest higher bit
+        that contains 1. A zero cannot supply a loan.
       </div>
       ${
         nextBorrowPosition === undefined
           ? '<div class="borrow-no-action">No column currently requires regrouping.</div>'
           : borrowAction
       }
+      ${borrowChoiceFeedbackMarkup()}
     `;
     return;
   }
@@ -927,7 +967,7 @@ function updateBorrowProcess() {
               </div>
               <div class="borrow-calculation">
                 At bit ${position}: ${column.aBit} + 2 − ${column.bBit} − ${column.borrowIn}
-                = ${column.resultBit}. Bit ${source} now shows “1 lent to right.”
+                = ${column.resultBit}.
               </div>
             </div>
           `;
@@ -935,6 +975,7 @@ function updateBorrowProcess() {
         .join("")}
     </div>
     ${borrowAction}
+    ${borrowChoiceFeedbackMarkup()}
   `;
 }
 
@@ -942,6 +983,32 @@ function handleBorrowGuideClick(event) {
   const button = event.target.closest("[data-borrow-position]");
   if (!button) return;
   const position = Number(button.dataset.borrowPosition);
+  const chosenSource = Number(button.dataset.borrowSource);
+  const correctSource = borrowSourceBit(position);
+
+  if (chosenSource !== correctSource) {
+    let message;
+    if (chosenSource >= current.width) {
+      message = `A source exists inside the register. Look for the nearest 1 to the left of bit ${position}.`;
+    } else {
+      const chosenValue = regroupedColumn(chosenSource).value;
+      message =
+        chosenValue <= 0
+          ? `Bit ${chosenSource} currently contains 0, so it cannot supply the loan. Look farther left.`
+          : `Bit ${chosenSource} contains 1, but bit ${correctSource} is the nearer source. Borrow from the nearest available 1.`;
+    }
+    borrowChoiceFeedback = { type: "error", message };
+    updateBorrowProcess();
+    return;
+  }
+
+  borrowChoiceFeedback = {
+    type: "success",
+    message:
+      chosenSource < current.width
+        ? `Correct: bit ${chosenSource} is the nearest higher bit containing 1.`
+        : "Correct: no bit in the register can supply the loan.",
+  };
   const input = document.querySelector(
     `[data-mechanics-kind="flow"][data-position="${position}"]`,
   );
