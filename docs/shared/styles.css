@@ -653,6 +653,45 @@ fieldset {
   font-size: 0.78rem;
 }
 
+.custom-subtraction-panel {
+  border-color: rgba(82, 215, 208, 0.48);
+}
+
+.custom-subtraction-equation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: end;
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.custom-subtraction-equation .operator {
+  padding-bottom: 9px;
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 2.8rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.custom-subtraction-equation input {
+  min-height: 64px;
+  font-size: 1.8rem;
+  text-align: center;
+}
+
+.custom-subtraction-options {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.custom-subtraction-options .field {
+  width: min(220px, 100%);
+  margin: 0;
+}
+
 .microcopy {
   margin: 8px 0 0;
   color: var(--faint);
@@ -1620,6 +1659,15 @@ body[data-mode="verify"] .guided-only {
   .borrow-loan {
     grid-template-columns: 1fr;
     gap: 7px;
+  }
+
+  .custom-subtraction-equation {
+    gap: 9px;
+  }
+
+  .custom-subtraction-options {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 

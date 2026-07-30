@@ -222,6 +222,8 @@ function applyPreset(name) {
   byId("customProblem").classList.remove("active");
   byId("customSubtraction").classList.remove("active");
   byId("customEntryNote").hidden = true;
+  byId("customSubtractionPanel").hidden = true;
+  byId("representationPanel").hidden = false;
 
   const callout = byId("conceptCallout");
   callout.innerHTML = "";
@@ -236,7 +238,7 @@ function startCustomProblem(subtraction = false) {
   all("[data-preset]").forEach((button) => button.classList.remove("active"));
   byId("customProblem").classList.toggle("active", !subtraction);
   byId("customSubtraction").classList.toggle("active", subtraction);
-  byId("customEntryNote").hidden = false;
+  byId("customEntryNote").hidden = subtraction;
   if (subtraction) {
     byId("width").value = "4";
     byId("base").value = "10";
@@ -244,6 +246,20 @@ function startCustomProblem(subtraction = false) {
     setRadio("operation", "subtract");
     setRadio("subtractionMethod", "borrow");
     updateSubtractionControls();
+    byId("customOperandA").value = "";
+    byId("customOperandB").value = "";
+    byId("customSubtractionWidth").value = "4";
+    byId("customSubtractionError").textContent = "";
+    byId("customSubtractionError").classList.remove("visible");
+    byId("customSubtractionPanel").hidden = false;
+    byId("representationPanel").hidden = true;
+    byId("predictionStage").hidden = true;
+    byId("mechanicsStage").hidden = true;
+    byId("interpretationStage").hidden = true;
+    byId("resultBanner").classList.remove("visible");
+  } else {
+    byId("customSubtractionPanel").hidden = true;
+    byId("representationPanel").hidden = false;
   }
   byId("operandA").value = "";
   byId("operandB").value = "";
@@ -261,11 +277,46 @@ function startCustomProblem(subtraction = false) {
     title,
     document.createTextNode(
       subtraction
-        ? "Type any A and B values—including 8 and 1—then select “Load this problem.”"
+        ? "Use the large A − B editor in the main workspace. Enter any values—including 8 and 1—then start the subtraction."
         : "Choose the width, input base, interpretation, and operation. Enter A and B, then select “Load this problem.”",
     ),
   );
-  byId("operandA").focus();
+  (subtraction ? byId("customOperandA") : byId("operandA")).focus();
+}
+
+function loadCustomSubtraction() {
+  byId("width").value = byId("customSubtractionWidth").value;
+  byId("base").value = "10";
+  setRadio("interpretation", "unsigned");
+  setRadio("operation", "subtract");
+  setRadio("subtractionMethod", "borrow");
+  byId("operandA").value = byId("customOperandA").value;
+  byId("operandB").value = byId("customOperandB").value;
+  updateSubtractionControls();
+  loadProblem();
+
+  const error = byId("customSubtractionError");
+  if (!current) {
+    error.textContent =
+      byId("setupError").textContent || "Enter valid values for A and B.";
+    error.classList.add("visible");
+    return;
+  }
+
+  error.textContent = "";
+  error.classList.remove("visible");
+  byId("customSubtractionPanel").hidden = true;
+  byId("representationPanel").hidden = false;
+  byId("representationPanel").scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+}
+
+function cancelCustomSubtraction() {
+  byId("customSubtractionPanel").hidden = true;
+  byId("representationPanel").hidden = false;
+  byId("customSubtraction").classList.remove("active");
 }
 
 function randomRaw(width) {
@@ -1458,6 +1509,11 @@ all("[data-preset]").forEach((button) => {
 byId("customProblem").addEventListener("click", () => startCustomProblem(false));
 byId("customSubtraction").addEventListener("click", () =>
   startCustomProblem(true),
+);
+byId("loadCustomSubtraction").addEventListener("click", loadCustomSubtraction);
+byId("cancelCustomSubtraction").addEventListener(
+  "click",
+  cancelCustomSubtraction,
 );
 byId("borrowProcess").addEventListener("click", handleBorrowGuideClick);
 

@@ -8,7 +8,7 @@
       content="A guided CEC220 workbench for carries, borrows, two's complement, overflow, underflow, and fixed-width arithmetic."
     >
     <title>Fixed-Width Arithmetic · CEC220 Logic Studio</title>
-    <link rel="stylesheet" href="../shared/styles.css?v=20260730h">
+    <link rel="stylesheet" href="../shared/styles.css?v=20260730i">
   </head>
   <body class="tool-page" data-mode="learn">
     <header class="site-header">
@@ -209,6 +209,43 @@
         </aside>
 
         <div class="workspace-main">
+          <section class="panel custom-subtraction-panel" id="customSubtractionPanel" hidden>
+            <div class="panel-header">
+              <h2>Enter your subtraction problem</h2>
+              <button type="button" class="quiet" id="cancelCustomSubtraction">Cancel</button>
+            </div>
+            <p class="microcopy">
+              Choose the register width, then enter any unsigned decimal values
+              for A and B.
+            </p>
+            <div class="custom-subtraction-equation" aria-label="Custom subtraction">
+              <div class="field">
+                <label for="customOperandA">A</label>
+                <input class="mono-input" id="customOperandA" inputmode="numeric" autocomplete="off" placeholder="enter A">
+              </div>
+              <span class="operator" aria-hidden="true">−</span>
+              <div class="field">
+                <label for="customOperandB">B</label>
+                <input class="mono-input" id="customOperandB" inputmode="numeric" autocomplete="off" placeholder="enter B">
+              </div>
+            </div>
+            <div class="custom-subtraction-options">
+              <div class="field">
+                <label for="customSubtractionWidth">Register width</label>
+                <select id="customSubtractionWidth">
+                  <option value="4" selected>4 bits</option>
+                  <option value="5">5 bits</option>
+                  <option value="6">6 bits</option>
+                  <option value="8">8 bits</option>
+                  <option value="12">12 bits</option>
+                  <option value="16">16 bits</option>
+                </select>
+              </div>
+              <button type="button" id="loadCustomSubtraction">Start this subtraction</button>
+            </div>
+            <div class="error-box" id="customSubtractionError" role="alert"></div>
+          </section>
+
           <section class="panel" id="representationPanel">
             <div class="panel-header">
               <h2><span class="stage-number">1</span>Represent the operands</h2>
@@ -372,6 +409,6 @@
       </footer>
     </main>
 
-    <script type="module" src="./arithmetic.js?v=20260730h"></script>
+    <script type="module" src="./arithmetic.js?v=20260730i"></script>
   </body>
 </html>
