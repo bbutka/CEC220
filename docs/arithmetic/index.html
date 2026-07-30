@@ -8,7 +8,7 @@
       content="A guided CEC220 workbench for carries, borrows, two's complement, overflow, underflow, and fixed-width arithmetic."
     >
     <title>Fixed-Width Arithmetic · CEC220 Logic Studio</title>
-    <link rel="stylesheet" href="../shared/styles.css?v=20260730c">
+    <link rel="stylesheet" href="../shared/styles.css?v=20260730d">
   </head>
   <body class="tool-page" data-mode="learn">
     <header class="site-header">
@@ -275,13 +275,9 @@
 
             <div id="bitMechanicsWork">
               <p class="microcopy" id="mechanicsInstruction" style="margin-bottom: 12px"></p>
+              <div class="borrow-process" id="borrowProcess" hidden></div>
               <div class="table-scroll" id="mechanicsTable"></div>
-              <p class="table-note">
-                Work from bit 0 on the right toward the most-significant bit.
-                Enter the result and the carry or borrow leaving each column;
-                that outgoing value appears automatically as the input to the
-                next column.
-              </p>
+              <p class="table-note" id="mechanicsFlowNote"></p>
               <div class="step-actions">
                 <button type="button" id="checkMechanics">Check my columns</button>
                 <button type="button" class="quiet guided-only" id="mechanicsHint">Hint</button>
@@ -364,6 +360,6 @@
       </footer>
     </main>
 
-    <script type="module" src="./arithmetic.js?v=20260730c"></script>
+    <script type="module" src="./arithmetic.js?v=20260730d"></script>
   </body>
 </html>

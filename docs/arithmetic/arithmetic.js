@@ -561,17 +561,20 @@ function renderMechanics() {
   const twosMethod =
     current.operation === "subtract" &&
     current.subtractionMethod === "twos";
-  const flowName =
-    current.operation === "subtract" && !twosMethod ? "borrow out" : "carry out";
-  const flowInName =
-    current.operation === "subtract" && !twosMethod ? "borrow in" : "carry in";
+  const borrowMethod = current.operation === "subtract" && !twosMethod;
+  const flowName = borrowMethod ? "borrow from left" : "carry out";
+  const flowInName = borrowMethod ? "lent to right" : "carry in";
   const initialFlow = twosMethod ? 1 : 0;
 
   byId("mechanicsInstruction").textContent = twosMethod
     ? "Add A + ~B with an initial carry-in of 1 at bit 0. This is the hardware form of A − B."
-    : current.operation === "subtract"
-      ? "Subtract B from A. If a column is negative, borrow 1 from the next position; that contributes 2 to the current bit."
+    : borrowMethod
+      ? "Subtract B from A, starting at bit 0. If a column is negative, borrow 1 from the bit immediately to its left; that borrowed 1 is worth 2 in the current column."
       : "Add A and B. A total of 2 or 3 writes a result bit and sends a carry of 1 to the next position.";
+  byId("mechanicsFlowNote").textContent = borrowMethod
+    ? "Work from right to left. A 1 in “borrow from left” automatically appears one column to the left as “1 lent to right.” The two entries describe the same loan."
+    : "Work from bit 0 on the right toward the most-significant bit. Enter the result and carry leaving each column; it appears automatically as the carry-in to the next column.";
+  byId("borrowProcess").hidden = !borrowMethod;
 
   byId("mechanicsTable").innerHTML = `
     <table class="mechanics-table" aria-label="Bit-by-bit arithmetic">
@@ -589,7 +592,7 @@ function renderMechanics() {
             .join("")}
         </tr>
         <tr><td>result bit</td>${positions.map((position) => `<td><input aria-label="Result bit ${position}" inputmode="numeric" maxlength="1" data-mechanics-kind="result" data-position="${position}"></td>`).join("")}</tr>
-        <tr><td>${flowName}</td>${positions.map((position) => `<td><input aria-label="${flowName} from bit ${position}" inputmode="numeric" maxlength="1" data-mechanics-kind="flow" data-position="${position}"></td>`).join("")}</tr>
+        <tr><td>${flowName}</td>${positions.map((position) => `<td><input aria-label="${borrowMethod ? `Borrow from bit ${position + 1} into bit ${position}` : `${flowName} from bit ${position}`}" inputmode="numeric" maxlength="1" data-mechanics-kind="flow" data-position="${position}"></td>`).join("")}</tr>
       </tbody>
     </table>
   `;
@@ -600,28 +603,99 @@ function renderMechanics() {
   updateLinkedFlows();
 }
 
+function updateBorrowProcess() {
+  const guide = byId("borrowProcess");
+  if (!guide || guide.hidden) return;
+
+  const activeLoans = all('[data-mechanics-kind="flow"]')
+    .filter((input) => input.value.trim() === "1")
+    .map((input) => Number(input.dataset.position));
+
+  if (activeLoans.length === 0) {
+    guide.innerHTML = `
+      <div class="borrow-process-title">How to show a borrow</div>
+      <div class="borrow-process-prompt">
+        If <strong>A − B − any 1 already lent to the right</strong> is negative,
+        enter <strong>1</strong> in <strong>borrow from left</strong>.
+        The matching loan will appear in the next column automatically.
+      </div>
+    `;
+    return;
+  }
+
+  guide.innerHTML = `
+    <div class="borrow-process-title">Borrow process</div>
+    <div class="borrow-loan-list">
+      ${activeLoans
+        .map((position) => {
+          const source = position + 1;
+          const column = current.columns.find(
+            (item) => item.position === position,
+          );
+          if (source >= current.width) {
+            return `
+              <div class="borrow-loan">
+                <div class="borrow-flow">
+                  <span class="borrow-chip">outside register</span>
+                  <span class="borrow-direction">→</span>
+                  <span class="borrow-chip">bit ${position} receives 2</span>
+                </div>
+                <div class="borrow-calculation">
+                  The most-significant bit needs a loan from beyond the register.
+                </div>
+              </div>
+            `;
+          }
+          return `
+            <div class="borrow-loan">
+              <div class="borrow-flow">
+                <span class="borrow-chip">bit ${source} gives 1</span>
+                <span class="borrow-direction">→</span>
+                <span class="borrow-chip">bit ${position} receives 2</span>
+              </div>
+              <div class="borrow-calculation">
+                At bit ${position}: ${column.aBit} + 2 − ${column.bBit} − ${column.borrowIn}
+                = ${column.resultBit}. Bit ${source} now shows “1 lent to right.”
+              </div>
+            </div>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
 function updateLinkedFlows() {
   if (!current) return;
   const twosMethod =
     current.operation === "subtract" &&
     current.subtractionMethod === "twos";
+  const borrowMethod =
+    current.operation === "subtract" &&
+    current.subtractionMethod === "borrow";
   for (let position = 0; position < current.width; position += 1) {
     const target = document.querySelector(
       `[data-flow-in-position="${position}"]`,
     );
     if (!target) continue;
     if (position === 0) {
-      target.textContent = twosMethod ? "1" : "0";
-      target.classList.add("known");
+      target.textContent = borrowMethod ? "—" : twosMethod ? "1" : "0";
+      target.classList.toggle("known", !borrowMethod);
       continue;
     }
     const source = document.querySelector(
       `[data-mechanics-kind="flow"][data-position="${position - 1}"]`,
     );
     const value = source?.value.trim();
-    target.textContent = value === "0" || value === "1" ? value : "·";
+    if (borrowMethod && value === "1") {
+      target.innerHTML =
+        '<span class="borrow-give" aria-label="1 lent to the bit on the right">1 <span aria-hidden="true">→</span></span>';
+    } else {
+      target.textContent = value === "0" || value === "1" ? value : "·";
+    }
     target.classList.toggle("known", value === "0" || value === "1");
   }
+  updateBorrowProcess();
 }
 
 function expectedTwosValue(input) {
@@ -723,7 +797,7 @@ function checkMechanics(showFeedback = true) {
           ? "result bit"
           : current.operation === "subtract" &&
               current.subtractionMethod === "borrow"
-            ? "borrow-out"
+            ? "borrow from the bit on the left"
             : "carry-out";
       setFeedback(
         "mechanicsFeedback",
