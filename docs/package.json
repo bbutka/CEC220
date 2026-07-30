@@ -1,0 +1,8 @@
+{
+  "name": "cec220-logic-studio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/arithmetic-core.test.mjs"
+  }
+}

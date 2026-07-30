@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analog vs Digital — Signal Sampling Quiz</title>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#1a2233; --panel2:#222c42; --edge:#33415c;
+    --text:#e8edf6; --muted:#94a3c4; --accent:#4f9cff; --accent2:#7c5cff;
+    --true:#22c55e; --false:#64748b; --bad:#ef4444; --warn:#f59e0b;
+    --mono:"SF Mono","Consolas","Cascadia Code",monospace;
+    --font:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.5;padding:24px}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:20px}
+  .wrap{max-width:900px;margin:0 auto}
+  .card{background:var(--panel);border:1px solid var(--edge);border-radius:12px;padding:18px;margin-bottom:18px}
+  .card h2{font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 12px}
+  label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px}
+  canvas{display:block;margin:0 auto;background:var(--bg);border-radius:8px;width:100%;max-width:800px}
+  button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer}
+  button:hover{filter:brightness(1.1)}
+  button.ghost{background:var(--panel2);border:1px solid var(--edge);color:var(--text)}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .err{color:var(--bad);font-family:var(--mono);font-size:13px;margin-top:6px;min-height:18px}
+  .hint{color:var(--muted);font-size:12px;margin-top:6px}
+  code{background:var(--panel2);padding:1px 6px;border-radius:4px;font-family:var(--mono)}
+  .step{color:var(--accent);font-weight:800}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:600px){.grid{grid-template-columns:1fr}}
+  .result{display:none;margin-top:12px;padding:12px 16px;border-radius:8px;font-weight:700;font-size:15px}
+  .result.ok{display:block;background:rgba(34,197,94,.12);color:var(--true);border:1px solid var(--true)}
+  .result.fail{display:block;background:rgba(239,68,68,.12);color:var(--bad);border:1px solid var(--bad)}
+  .result.info{display:block;background:rgba(79,156,255,.10);color:var(--accent);border:1px solid var(--accent)}
+  .ans-row{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+  .ans-item{background:var(--panel2);border:1px solid var(--edge);border-radius:8px;padding:12px;text-align:center;min-width:90px}
+  .ans-item .label{font-size:11px;color:var(--muted)}
+  .ans-item input{background:var(--bg);border:1px solid var(--edge);color:var(--text);border-radius:6px;padding:6px 8px;font-size:16px;font-family:var(--mono);width:60px;text-align:center;margin-top:4px}
+  .ans-item input:focus{outline:none;border-color:var(--accent)}
+  .ans-item .truth{font-size:13px;font-weight:700;margin-top:4px;min-height:18px}
+  select{background:var(--panel2);border:1px solid var(--edge);color:var(--text);border-radius:8px;padding:8px 10px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Analog → Digital: Reading a Sampled Signal</h1>
+  <div class="sub">An analog sine wave is sampled at regular intervals (vertical lines). Click each sample and read its digital value.</div>
+
+  <div class="card">
+    <h2><span class="step">1</span> · Pick a signal &amp; quantization</h2>
+    <div class="toolbar">
+      <label style="margin:0">Resolution:</label>
+      <select id="resolution">
+        <option value="4">4 levels (2 bits)</option>
+        <option value="8" selected>8 levels (3 bits)</option>
+        <option value="16">16 levels (4 bits)</option>
+        <option value="32">32 levels (5 bits)</option>
+      </select>
+      <button id="newSignal">New random signal</button>
+      <button class="ghost" id="revealSamples">Reveal digital values</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">2</span> · Read the samples</h2>
+    <canvas id="canvas" height="320"></canvas>
+    <div class="ans-row" id="answerRow"></div>
+    <div class="toolbar" style="margin-top:12px;justify-content:center">
+      <button id="checkSamples">Check my readings</button>
+    </div>
+    <div class="result" id="sampleResult"></div>
+    <div class="hint">For each sample point, estimate the analog value and type the digital level (0 to N-1) that the ADC would produce.</div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">3</span> · ADC/DAC demo</h2>
+    <div class="hint" style="margin-bottom:8px">Click the button to see the reconstructed signal (what the DAC outputs after sampling + quantizing).</div>
+    <div class="toolbar">
+      <button id="showDac">Show reconstructed signal</button>
+      <button class="ghost" id="hideDac">Hide it</button>
+    </div>
+    <canvas id="dacCanvas" height="200" style="margin-top:8px"></canvas>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">4</span> · Aliasing &amp; the Nyquist limit</h2>
+    <div class="hint" style="margin-bottom:10px">A pure sine wave (blue) is sampled N times across the window (green dots). If you don't sample fast enough, those same dots also fit a slower wave (orange dashed) — the signal is <b>aliased</b>. Nyquist: you need at least <b>2 samples per cycle</b>.</div>
+    <div class="toolbar">
+      <label style="margin:0;min-width:150px">Signal: <b id="fLabel">3</b> cycles/window</label>
+      <input type="range" id="sigFreq" min="1" max="15" value="3" step="1" style="flex:1;min-width:120px">
+    </div>
+    <div class="toolbar">
+      <label style="margin:0;min-width:150px">Samples N: <b id="nLabel">16</b></label>
+      <input type="range" id="sampRate" min="4" max="48" value="16" step="1" style="flex:1;min-width:120px">
+    </div>
+    <canvas id="aliasCanvas" height="240"></canvas>
+    <div class="result" id="aliasResult"></div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const canvas=$('canvas');
+const ctx=canvas.getContext('2d');
+const dacCanvas=$('dacCanvas');
+const dacCtx=dacCanvas.getContext('2d');
+
+// Canvas 2D cannot read CSS var() colors — resolve them to concrete hex once.
+const _cs=getComputedStyle(document.documentElement);
+const _c=(n,f)=>{const v=_cs.getPropertyValue(n).trim();return v||f;};
+const COL={
+  edge:_c('--edge','#33415c'), muted:_c('--muted','#94a3c4'),
+  accent:_c('--accent','#4f9cff'), true:_c('--true','#22c55e'),
+  warn:_c('--warn','#f59e0b'), bad:_c('--bad','#ef4444'), bg:_c('--bg','#0f1420')
+};
+const aliasCanvas=$('aliasCanvas');
+const actx=aliasCanvas.getContext('2d');
+
+let samples=[];      // actual analog values at sample points (0..1)
+let quantized=[];    // quantized digital levels
+let resolution=8;
+let NUM_SAMPLES=8;
+let showDacFlag=false;
+let revealed=false;
+
+function resizeCanvas(){
+  const w=canvas.parentElement.clientWidth-36;
+  canvas.width=Math.min(w,800);
+  canvas.height=320;
+  dacCanvas.width=canvas.width;
+  dacCanvas.height=200;
+  aliasCanvas.width=canvas.width;
+  aliasCanvas.height=240;
+}
+
+let wave={phase:0,freq1:1,freq2:1,amp1:0.5,amp2:0};
+
+// Continuous analog value at time t in [0,1]. Drawn independently of the
+// samples so the curve is a real signal, not a connect-the-dots of samples.
+function signalAt(t){
+  const val=0.5
+    +wave.amp1*Math.sin(t*Math.PI*wave.freq1+wave.phase)
+    +wave.amp2*Math.cos(t*Math.PI*wave.freq2);
+  return Math.max(0,Math.min(1,val));
+}
+
+function generateSignal(){
+  resolution=parseInt($('resolution').value);
+  NUM_SAMPLES=8+Math.floor(Math.random()*5)*2; // 8,10,12,14,16
+  samples=[];
+  quantized=[];
+  revealed=false;
+  showDacFlag=false;
+
+  wave={
+    phase:Math.random()*Math.PI*2,
+    freq1:0.8+Math.random()*0.6,
+    freq2:1.2+Math.random()*1.0,
+    amp1:0.5+Math.random()*0.3,
+    amp2:0
+  };
+  wave.amp2=0.5-wave.amp1;
+
+  for(let i=0;i<NUM_SAMPLES;i++){
+    const t=i/(NUM_SAMPLES-1);
+    const val=signalAt(t);
+    samples.push(val);
+    const level=Math.floor(val*resolution);
+    quantized.push(Math.min(level,resolution-1));
+  }
+}
+
+function draw(){
+  const w=canvas.width, h=canvas.height;
+  const pad=50;
+  const graphW=w-2*pad, graphH=h-2*pad;
+
+  ctx.clearRect(0,0,w,h);
+
+  // Grid
+  ctx.strokeStyle=COL.edge;
+  ctx.lineWidth=1;
+  const numLevels=resolution;
+  for(let l=0;l<=numLevels;l++){
+    const y=pad+graphH*(1-l/numLevels);
+    ctx.beginPath();
+    ctx.moveTo(pad,y);
+    ctx.lineTo(pad+graphW,y);
+    ctx.stroke();
+    ctx.fillStyle=COL.muted;
+    ctx.font='11px monospace';
+    ctx.textAlign='right';
+    ctx.fillText(l,pad-8,y+4);
+  }
+
+  // Sample markers
+  for(let i=0;i<NUM_SAMPLES;i++){
+    const x=pad+i*graphW/(NUM_SAMPLES-1);
+    ctx.strokeStyle='rgba(79,156,255,0.25)';
+    ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(x,pad);
+    ctx.lineTo(x,pad+graphH);
+    ctx.stroke();
+  }
+
+  // Analog signal (smooth curve)
+  ctx.strokeStyle=COL.accent;
+  ctx.lineWidth=2.5;
+  ctx.beginPath();
+  const CURVE_POINTS=300;
+  for(let i=0;i<=CURVE_POINTS;i++){
+    const t=i/CURVE_POINTS;
+    const val=signalAt(t);
+    const x=pad+t*graphW;
+    const y=pad+graphH*(1-val);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+
+  // Sample points
+  for(let i=0;i<NUM_SAMPLES;i++){
+    const x=pad+i*graphW/(NUM_SAMPLES-1);
+    const y=pad+graphH*(1-samples[i]);
+    ctx.beginPath();
+    ctx.arc(x,y,5,0,Math.PI*2);
+    ctx.fillStyle=COL.accent;
+    ctx.fill();
+  }
+
+  // Quantized (staircase) if revealed
+  if(revealed||showDacFlag){
+    ctx.strokeStyle=COL.true;
+    ctx.lineWidth=2;
+    ctx.setLineDash([4,4]);
+    ctx.beginPath();
+    for(let i=0;i<NUM_SAMPLES;i++){
+      const x1=pad+(i>0?i-0.5:0)*graphW/(NUM_SAMPLES-1);
+      const x2=pad+(i<NUM_SAMPLES-1?i+0.5:NUM_SAMPLES-1)*graphW/(NUM_SAMPLES-1);
+      const level=quantized[i];
+      const y=pad+graphH*(1-(level+0.5)/resolution);
+      if(i===0) ctx.moveTo(pad,y);
+      ctx.lineTo(x2,y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Axis labels
+  ctx.fillStyle=COL.muted;
+  ctx.font='11px monospace';
+  ctx.textAlign='center';
+  ctx.fillText('Sample index',pad+graphW/2,h-12);
+}
+
+function buildAnswerRow(){
+  const cont=$('answerRow'); cont.innerHTML='';
+  for(let i=0;i<NUM_SAMPLES;i++){
+    const d=document.createElement('div');
+    d.className='ans-item';
+    d.innerHTML=`
+      <div class="label">Sample ${i}</div>
+      <input class="samp-inp" data-i="${i}" maxlength="2">
+      <div class="truth" id="truth${i}"></div>
+    `;
+    cont.appendChild(d);
+  }
+}
+
+function drawDac(){
+  const w=dacCanvas.width, h=dacCanvas.height;
+  const pad=40;
+  const graphW=w-2*pad, graphH=h-2*pad;
+  dacCtx.clearRect(0,0,w,h);
+
+  if(!showDacFlag) return;
+
+  // Reconstructed signal (DAC output)
+  dacCtx.strokeStyle=COL.true;
+  dacCtx.lineWidth=2.5;
+  dacCtx.beginPath();
+  for(let i=0;i<NUM_SAMPLES;i++){
+    const x1=pad+(i>0?i-0.5:0)*graphW/(NUM_SAMPLES-1);
+    const x2=pad+(i<NUM_SAMPLES-1?i+0.5:NUM_SAMPLES-1)*graphW/(NUM_SAMPLES-1);
+    const level=quantized[i];
+    const y=pad+graphH*(1-(level+0.5)/resolution);
+    if(i===0) dacCtx.moveTo(pad,y);
+    dacCtx.lineTo(x2,y);
+  }
+  dacCtx.stroke();
+
+  // Grid
+  dacCtx.strokeStyle=COL.edge;
+  dacCtx.lineWidth=1;
+  for(let l=0;l<=resolution;l++){
+    const y=pad+graphH*(1-l/resolution);
+    dacCtx.beginPath();
+    dacCtx.moveTo(pad,y);
+    dacCtx.lineTo(pad+graphW,y);
+    dacCtx.stroke();
+  }
+
+  // Labels
+  dacCtx.fillStyle=COL.muted;
+  dacCtx.font='11px monospace';
+  dacCtx.textAlign='center';
+  dacCtx.fillText('Reconstructed signal (DAC output)',pad+graphW/2,h-10);
+}
+
+/* Check answers */
+$('checkSamples').onclick=()=>{
+  const r=$('sampleResult');
+  let allOk=true;
+  const inpEls=document.querySelectorAll('.samp-inp');
+  inpEls.forEach(inp=>{
+    const i=parseInt(inp.dataset.i);
+    const user=parseInt(inp.value);
+    const truth=$('truth'+i);
+    if(isNaN(user)){
+      allOk=false;
+      truth.style.color=COL.warn;
+      truth.textContent='\u26A0 enter a value';
+    }else if(user===quantized[i]){
+      truth.style.color=COL.true;
+      truth.textContent='\u2713';
+    }else{
+      allOk=false;
+      truth.style.color=COL.bad;
+      truth.textContent='\u2717 expected '+quantized[i];
+    }
+  });
+  if(allOk){
+    r.className='result ok';
+    r.textContent='\u2713 All samples read correctly! You are reading the ADC quantization correctly.';
+  }else{
+    r.className='result fail';
+    r.textContent='\u2717 Some readings are wrong. Check the highlighted samples and try again.';
+  }
+};
+
+$('revealSamples').onclick=()=>{
+  revealed=true;
+  draw();
+  const inpEls=document.querySelectorAll('.samp-inp');
+  inpEls.forEach(inp=>{
+    const i=parseInt(inp.dataset.i);
+    $('truth'+i).style.color=COL.accent;
+    $('truth'+i).textContent='= '+quantized[i];
+  });
+  $('sampleResult').className='result info';
+  $('sampleResult').textContent='Digital values shown above.';
+};
+
+$('showDac').onclick=()=>{showDacFlag=true;drawDac();draw();};
+$('hideDac').onclick=()=>{showDacFlag=false;drawDac();draw();};
+$('newSignal').onclick=()=>{generateSignal();resizeCanvas();draw();buildAnswerRow();drawDac();$('sampleResult').className='result';$('sampleResult').textContent='';};
+$('resolution').onchange=$('newSignal').onclick;
+
+/* ---- Aliasing / Nyquist demo ---- */
+// Fold an integer frequency m (cycles) sampled N times into the band [0, N/2].
+function aliasFold(m,N){
+  const r=((m%N)+N)%N;
+  if(r===0) return {freq:0,sign:1};
+  if(r<=N/2) return {freq:r,sign:1};
+  return {freq:N-r,sign:-1};   // reflected: samples fit the inverted lower-freq wave
+}
+function drawAlias(){
+  const f=parseInt($('sigFreq').value);
+  const N=parseInt($('sampRate').value);
+  $('fLabel').textContent=f;
+  $('nLabel').textContent=N;
+  const w=aliasCanvas.width, h=aliasCanvas.height, pad=30;
+  const gW=w-2*pad, gH=h-2*pad;
+  actx.clearRect(0,0,w,h);
+  const yOf=v=>pad+gH*(1-(0.5+0.42*v));   // v in [-1,1] -> pixel
+  // midline
+  actx.strokeStyle=COL.edge; actx.lineWidth=1;
+  actx.beginPath(); actx.moveTo(pad,pad+gH/2); actx.lineTo(pad+gW,pad+gH/2); actx.stroke();
+  // true continuous signal
+  actx.strokeStyle=COL.accent; actx.lineWidth=2.5; actx.beginPath();
+  for(let i=0;i<=500;i++){const t=i/500;const v=Math.sin(2*Math.PI*f*t);const x=pad+t*gW;const y=yOf(v);i===0?actx.moveTo(x,y):actx.lineTo(x,y);}
+  actx.stroke();
+  const {freq:fa,sign}=aliasFold(f,N);
+  const aliased=(f>N/2);
+  // alias wave (only when undersampled) — passes through the same sample dots
+  if(aliased){
+    actx.strokeStyle=COL.warn; actx.lineWidth=2.5; actx.setLineDash([6,4]); actx.beginPath();
+    for(let i=0;i<=500;i++){const t=i/500;const v=sign*Math.sin(2*Math.PI*fa*t);const x=pad+t*gW;const y=yOf(v);i===0?actx.moveTo(x,y):actx.lineTo(x,y);}
+    actx.stroke(); actx.setLineDash([]);
+  }
+  // sample dots (taken from the TRUE signal)
+  for(let i=0;i<N;i++){const t=i/N;const v=Math.sin(2*Math.PI*f*t);const x=pad+t*gW;const y=yOf(v);
+    actx.beginPath(); actx.arc(x,y,4,0,Math.PI*2); actx.fillStyle=COL.true; actx.fill();}
+  const r=$('aliasResult');
+  if(!aliased){
+    r.className='result ok';
+    r.textContent='✓ Correctly sampled. N = '+N+' samples ≥ 2×'+f+' = '+(2*f)+'. Nyquist satisfied — the samples uniquely fit the '+f+'-cycle signal.';
+  }else{
+    r.className='result fail';
+    r.textContent='✗ Undersampled — aliasing! N = '+N+' < 2×'+f+' = '+(2*f)+'. The same samples also fit a '+fa+'-cycle wave (orange) — that is the alias you would reconstruct.';
+  }
+}
+$('sigFreq').oninput=drawAlias;
+$('sampRate').oninput=drawAlias;
+
+window.onresize=()=>{resizeCanvas();draw();drawDac();drawAlias();};
+
+// Init
+resizeCanvas();
+generateSignal();
+draw();
+buildAnswerRow();
+drawDac();
+drawAlias();
+</script>
+</body>
+</html>

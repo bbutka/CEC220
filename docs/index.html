@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Interactive CEC220 tools for learning digital logic from bits and gates through state machines and arithmetic algorithms."
+    >
+    <title>CEC220 Logic Studio</title>
+    <link rel="stylesheet" href="./shared/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="./">
+          <span class="brand-mark" aria-hidden="true">01</span>
+          <span>CEC220 Logic Studio</span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+          <a href="#pathway">Course pathway</a>
+          <a href="#tool-library">Tool library</a>
+          <a class="button secondary" href="./arithmetic/">Open arithmetic</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Digital Circuit Design · Interactive tools</p>
+          <h1>Reason through the bits. Then verify the machine.</h1>
+          <p class="lede">
+            CEC220 Logic Studio turns calculators into guided reasoning tools.
+            Predict each important decision, expose the hardware mechanics, and
+            verify the completed design.
+          </p>
+          <div class="actions">
+            <a class="button orange" href="./arithmetic/">Start fixed-width arithmetic</a>
+            <a class="button secondary" href="#existing-tools">Browse existing tools</a>
+          </div>
+        </div>
+        <aside class="hero-aside">
+          <strong>The learning loop</strong>
+          <p>
+            Specify → predict → perform one step → receive feedback → explain
+            → reveal → verify.
+          </p>
+        </aside>
+      </section>
+
+      <section class="section" id="pathway">
+        <div class="section-heading">
+          <h2>One hierarchy, built layer by layer</h2>
+          <p>
+            Each tool keeps the connection between representation, physical
+            circuitry, state, and algorithms visible.
+          </p>
+        </div>
+        <div class="pathway" aria-label="Course concept pathway">
+          <article class="path-step">
+            <span>01</span>
+            <h3>Representations</h3>
+            <p>Bases, width, signedness, and fixed-size bit patterns.</p>
+          </article>
+          <article class="path-step">
+            <span>02</span>
+            <h3>Gates</h3>
+            <p>Boolean behavior realized by physical switching circuits.</p>
+          </article>
+          <article class="path-step">
+            <span>03</span>
+            <h3>Combinational logic</h3>
+            <p>Adders, selectors, truth tables, and verified equations.</p>
+          </article>
+          <article class="path-step">
+            <span>04</span>
+            <h3>State</h3>
+            <p>Registers, transitions, control decisions, and complete FSMs.</p>
+          </article>
+          <article class="path-step">
+            <span>05</span>
+            <h3>Algorithms</h3>
+            <p>Multiplication and division as controlled register transfers.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="tool-library">
+        <div class="section-heading">
+          <h2>Guided workbenches</h2>
+          <p>
+            Use Learn for coached examples, Practice for targeted repetition,
+            and Verify for checking a completed solution.
+          </p>
+        </div>
+        <div class="tool-grid">
+          <a class="tool-card" href="./arithmetic/">
+            <span class="tool-number">WORKBENCH 01</span>
+            <h3>Fixed-Width Arithmetic</h3>
+            <p>
+              Carries, borrows, two’s complement, signed overflow, unsigned
+              underflow, and the meaning of the stored bits.
+            </p>
+            <span class="tool-status live">Available now</span>
+          </a>
+          <article class="tool-card">
+            <span class="tool-number">WORKBENCH 02</span>
+            <h3>State-Machine Design</h3>
+            <p>
+              Move from behavioral rules to a complete transition table,
+              equations, counterexamples, and implementation.
+            </p>
+            <span class="tool-status">Next milestone</span>
+          </article>
+          <article class="tool-card">
+            <span class="tool-number">WORKBENCH 03</span>
+            <h3>Register-Transfer Algorithms</h3>
+            <p>
+              Step through multiplication and division one control decision and
+              one clock edge at a time.
+            </p>
+            <span class="tool-status">Planned</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="existing-tools">
+        <div class="section-heading">
+          <h2>Existing course tools</h2>
+          <p>
+            The original focused tools remain available while their strongest
+            ideas are incorporated into the guided workbenches.
+          </p>
+        </div>
+        <div class="tool-grid">
+          <a class="tool-card" href="./legacy/1.1_analog_digital_sampling.html">
+            <span class="tool-number">LECTURE 1.1</span>
+            <h3>Analog &amp; Digital Sampling</h3>
+            <p>Sampling, quantization, reconstruction, aliasing, and Nyquist.</p>
+            <span class="tool-status live">Existing tool</span>
+          </a>
+          <a class="tool-card" href="./legacy/1.2_theorem_verifier.html">
+            <span class="tool-number">LECTURE 1.2</span>
+            <h3>Boolean Theorem Verifier</h3>
+            <p>Compare Boolean expressions across every input combination.</p>
+            <span class="tool-status live">Existing tool</span>
+          </a>
+          <a class="tool-card" href="./legacy/truth_table_tool.html">
+            <span class="tool-number">DESIGN TOOL</span>
+            <h3>Truth Table Verifier</h3>
+            <p>Turn a specification into a table and test a candidate equation.</p>
+            <span class="tool-status live">Existing tool</span>
+          </a>
+          <a class="tool-card" href="./legacy/1.4_base_converter.html">
+            <span class="tool-number">LECTURE 1.4</span>
+            <h3>Number Base Converter</h3>
+            <p>Convert and practice with binary, octal, decimal, and hexadecimal.</p>
+            <span class="tool-status live">Existing tool</span>
+          </a>
+          <a class="tool-card" href="./legacy/1.5_twos_complement_tool.html">
+            <span class="tool-number">LECTURE 1.5</span>
+            <h3>Two’s Complement</h3>
+            <p>Explore signed bit patterns, negation, addition, and overflow.</p>
+            <span class="tool-status live">Existing tool</span>
+          </a>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <span>CEC220 · Digital Circuit Design</span>
+        <span>Designed for prediction, explanation, and verification · <span data-current-year></span></span>
+      </footer>
+    </main>
+
+    <script type="module" src="./shared/site.js"></script>
+  </body>
+</html>
+

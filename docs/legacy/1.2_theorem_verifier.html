@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boolean Theorem Verifier — DeMorgan, Identity, Distributive</title>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#1a2233; --panel2:#222c42; --edge:#33415c;
+    --text:#e8edf6; --muted:#94a3c4; --accent:#4f9cff; --accent2:#7c5cff;
+    --true:#22c55e; --false:#64748b; --bad:#ef4444; --warn:#f59e0b;
+    --mono:"SF Mono","Consolas","Cascadia Code",monospace;
+    --font:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.5;padding:24px}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:20px}
+  .wrap{max-width:1000px;margin:0 auto}
+  .card{background:var(--panel);border:1px solid var(--edge);border-radius:12px;padding:18px;margin-bottom:18px}
+  .card h2{font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 12px}
+  label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px}
+  input[type=text]{width:100%;background:var(--panel2);border:1px solid var(--edge);color:var(--text);border-radius:8px;padding:10px 12px;font-size:15px;font-family:var(--mono)}
+  input[type=text]:focus{outline:none;border-color:var(--accent)}
+  button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer}
+  button:hover{filter:brightness(1.1)}
+  button.ghost{background:var(--panel2);border:1px solid var(--edge);color:var(--text)}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .err{color:var(--bad);font-family:var(--mono);font-size:13px;margin-top:8px;min-height:18px}
+  .hint{color:var(--muted);font-size:12px;margin-top:6px}
+  code{background:var(--panel2);padding:1px 6px;border-radius:4px;font-family:var(--mono)}
+  table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:13px;margin-top:8px}
+  th,td{border:1px solid var(--edge);padding:5px 8px;text-align:center}
+  th{background:var(--panel2);color:var(--muted);font-weight:600}
+  td.one{color:var(--true);font-weight:700}
+  td.zero{color:var(--false)}
+  td.match{background:rgba(34,197,94,.12)}
+  td.mismatch{background:rgba(239,68,68,.15);color:var(--bad);font-weight:700}
+  tr.firstmiss td{background:rgba(239,68,68,.10);border-color:var(--bad)}
+  th.lhs{background:rgba(79,156,255,.18)}
+  th.rhs{background:rgba(124,92,255,.18)}
+  .result{display:none;margin-top:12px;padding:12px 16px;border-radius:8px;font-weight:700;font-size:15px}
+  .result.ok{display:block;background:rgba(34,197,94,.12);color:var(--true);border:1px solid var(--true)}
+  .result.fail{display:block;background:rgba(239,68,68,.12);color:var(--bad);border:1px solid var(--bad)}
+  .frow{display:flex;gap:14px;flex-wrap:wrap}
+  .frow>div{flex:1;min-width:250px}
+  .step{color:var(--accent);font-weight:800}
+  details{margin-top:10px}
+  summary{cursor:pointer;color:var(--accent);font-size:13px}
+  .legend{font-size:12px;color:var(--muted);line-height:1.8}
+  .preset-btn{background:var(--panel2);border:1px solid var(--edge);color:var(--text);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:var(--mono)}
+  .preset-btn:hover{border-color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Boolean Theorem Verifier</h1>
+  <div class="sub">Type two Boolean expressions — the tool builds side-by-side truth tables and tells you if they are equivalent.</div>
+
+  <div class="card">
+    <h2><span class="step">1</span> · Choose or type a theorem</h2>
+    <div class="toolbar">
+      <button class="preset-btn" data-lhs="A+B" data-rhs="B+A">A+B = B+A (commutative)</button>
+      <button class="preset-btn" data-lhs="A·(B+C)" data-rhs="A·B+A·C">A(B+C) = AB+AC (distributive)</button>
+      <button class="preset-btn" data-lhs="(A+B)'" data-rhs="A'·B'">(A+B)' = A'·B' (De Morgan 1)</button>
+      <button class="preset-btn" data-lhs="(A·B)'" data-rhs="A'+B'">(AB)' = A'+B' (De Morgan 2)</button>
+      <button class="preset-btn" data-lhs="A+A·B" data-rhs="A">A+AB = A (absorption)</button>
+      <button class="preset-btn" data-lhs="A+A'" data-rhs="1">A+A' = 1 (complement)</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">2</span> · Enter the two expressions</h2>
+    <div class="frow">
+      <div>
+        <label>Left-hand side (LHS)</label>
+        <input type="text" id="lhs" placeholder="e.g.  (A+B)'">
+      </div>
+      <div>
+        <label>Right-hand side (RHS)</label>
+        <input type="text" id="rhs" placeholder="e.g.  A'·B'">
+      </div>
+    </div>
+    <div class="err" id="err"></div>
+    <div class="toolbar" style="margin-top:12px">
+      <button id="checkBtn">Verify equivalence</button>
+    </div>
+    <details>
+      <summary>Accepted syntax (click)</summary>
+      <div class="legend">
+        AND: <code>·</code> <code>*</code> <code>&amp;</code> <code>AND</code> or juxtaposition <code>AB</code><br>
+        OR: <code>+</code> <code>|</code> <code>OR</code> &nbsp;·&nbsp;
+        NOT: <code>!</code> <code>~</code> <code>NOT</code> or postfix <code>A'</code><br>
+        XOR: <code>^</code> <code>XOR</code> &nbsp;·&nbsp;
+        Grouping: <code>( )</code> &nbsp;·&nbsp; Precedence: NOT → AND → XOR → OR
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">3</span> · Truth table comparison</h2>
+    <div id="tableWrap"></div>
+    <div class="result" id="result"></div>
+  </div>
+</div>
+
+<script>
+/* ---------- PARSER (from truth_table_tool.html) ---------- */
+function tokenize(src, varSet, declared){
+  const t=[]; let i=0; const s=src;
+  const isIdStart=c=>/[A-Za-z_]/.test(c);
+  const isId=c=>/[A-Za-z0-9_]/.test(c);
+  while(i<s.length){
+    const c=s[i];
+    if(/\s/.test(c)){i++;continue;}
+    if(c==='('){t.push({k:'('});i++;continue;}
+    if(c===')'){t.push({k:')'});i++;continue;}
+    if(c==="'"||c==='\u2019'){t.push({k:'post_not'});i++;continue;}
+    if(c==='+'||c==='|'){t.push({k:'or'});i++;continue;}
+    if(c==='^'){t.push({k:'xor'});i++;continue;}
+    if(c==='\u00b7'||c==='*'||c==='&'||c==='\u2227'){t.push({k:'and'});i++;continue;}
+    if(c==='!'||c==='~'||c==='\u00ac'){t.push({k:'not'});i++;continue;}
+    if(c==='0'){t.push({k:'const',v:0});i++;continue;}
+    if(c==='1'){t.push({k:'const',v:1});i++;continue;}
+    if(c==='\u00b7'){t.push({k:'and'});i++;continue;}
+    if(isIdStart(c)){
+      let j=i+1; while(j<s.length&&isId(s[j]))j++;
+      const w=s.slice(i,j); const up=w.toUpperCase();
+      i=j;
+      if(up==='AND'){t.push({k:'and'});continue;}
+      if(up==='OR'){t.push({k:'or'});continue;}
+      if(up==='NOT'){t.push({k:'not'});continue;}
+      if(up==='XOR'){t.push({k:'xor'});continue;}
+      if(declared && !declared.has(up) && up.length>1 && [...up].every(ch=>declared.has(ch))){
+        [...up].forEach(ch=>{t.push({k:'var',v:ch});varSet.add(ch);});
+        continue;
+      }
+      t.push({k:'var',v:up}); varSet.add(up); continue;
+    }
+    throw new Error("Unexpected character: '"+c+"'");
+  }
+  return t;
+}
+
+function parse(src, declared){
+  const varSet=new Set();
+  const tk=tokenize(src,varSet,declared);
+  let p=0;
+  const peek=()=>tk[p];
+  const next=()=>tk[p++];
+  const eat=k=>{if(!peek()||peek().k!==k)throw new Error("Expected '"+k+"'");return next();};
+  function parseOr(){let n=parseXor();while(peek()&&peek().k==='or'){next();n={op:'or',a:n,b:parseXor()};}return n;}
+  function parseXor(){let n=parseAnd();while(peek()&&peek().k==='xor'){next();n={op:'xor',a:n,b:parseAnd()};}return n;}
+  function startsAtom(x){return x&&(x.k==='var'||x.k==='const'||x.k==='('||x.k==='not');}
+  function parseAnd(){let n=parseNot();while(peek()&&(peek().k==='and'||startsAtom(peek()))){if(peek().k==='and')next();n={op:'and',a:n,b:parseNot()};}return n;}
+  function parseNot(){if(peek()&&peek().k==='not'){next();return{op:'not',a:parseNot()};}return parsePostfix();}
+  function parsePostfix(){let n=parseAtom();while(peek()&&peek().k==='post_not'){next();n={op:'not',a:n};}return n;}
+  function parseAtom(){const x=peek();if(!x)throw new Error("Unexpected end");if(x.k==='('){next();const n=parseOr();eat(')');return n;}if(x.k==='var'){next();return{op:'var',name:x.v};}if(x.k==='const'){next();return{op:'const',v:x.v};}throw new Error("Unexpected token '"+x.k+"'");}
+  const tree=parseOr();
+  if(p<tk.length)throw new Error("Unexpected extra input");
+  return {tree,vars:varSet};
+}
+
+function evalTree(n,env){
+  switch(n.op){
+    case 'const': return n.v;
+    case 'var': return env[n.name]?1:0;
+    case 'not': return evalTree(n.a,env)?0:1;
+    case 'and': return (evalTree(n.a,env)&&evalTree(n.b,env))?1:0;
+    case 'or': return (evalTree(n.a,env)||evalTree(n.b,env))?1:0;
+    case 'xor': return (evalTree(n.a,env)^evalTree(n.b,env))?1:0;
+  }
+}
+
+function compile(expr, declared){
+  try{
+    const{tree,vars}=parse(expr,declared);
+    for(const v of vars){if(!declared.has(v)) throw new Error("Variable '"+v+"' is not declared in the other expression");}
+    return tree;
+  }catch(e){throw e;}
+}
+
+/* ---------- App ---------- */
+const $=id=>document.getElementById(id);
+
+function getVars(exprs){
+  const set=new Set();
+  const KW=new Set(['AND','OR','NOT','XOR']);
+  for(const e of exprs){
+    const m=e.match(/[A-Za-z_][A-Za-z0-9_]*/g);
+    if(!m) continue;
+    m.forEach(tok=>{
+      const up=tok.toUpperCase();
+      if(KW.has(up)) return;
+      // A multi-letter run like AB means A AND B, so treat each letter as a variable
+      [...up].forEach(ch=>{ if(/[A-Z]/.test(ch)) set.add(ch); });
+    });
+  }
+  return [...set].sort();
+}
+
+function run(){
+  const lhsStr=$('lhs').value.trim();
+  const rhsStr=$('rhs').value.trim();
+  $('err').textContent='';
+  if(!lhsStr||!rhsStr){$('err').textContent='Enter both expressions.';return;}
+  const vars=getVars([lhsStr,rhsStr]);
+  if(vars.length===0){$('err').textContent='No variables found.';return;}
+  const declared=new Set(vars);
+  let treeL, treeR;
+  try{treeL=compile(lhsStr,declared);}catch(e){$('err').textContent='LHS error: '+e.message;return;}
+  try{treeR=compile(rhsStr,declared);}catch(e){$('err').textContent='RHS error: '+e.message;return;}
+
+  const n=vars.length;
+  const rows=[];
+  for(let i=0;i<(1<<n);i++){
+    const env={};
+    vars.forEach((v,idx)=>{env[v]=(i>>(n-1-idx))&1;});
+    rows.push({env,vL:evalTree(treeL,env),vR:evalTree(treeR,env)});
+  }
+
+  const firstMiss=rows.findIndex(r=>r.vL!==r.vR);
+  let html='<table><thead><tr>';
+  vars.forEach(v=>html+=`<th>${v}</th>`);
+  html+=`<th class="lhs">LHS</th><th class="rhs">RHS</th><th>Match?</th></tr></thead><tbody>`;
+  rows.forEach((r,idx)=>{
+    const match=r.vL===r.vR;
+    html+=`<tr class="${idx===firstMiss?'firstmiss':''}">`;
+    vars.forEach(v=>html+=`<td class="${r.env[v]?'one':'zero'}">${r.env[v]}</td>`);
+    html+=`<td class="${r.vL?'one':'zero'}">${r.vL}</td>`;
+    html+=`<td class="${r.vR?'one':'zero'}">${r.vR}</td>`;
+    html+=`<td class="${match?'match':'mismatch'}">${match?'\u2713':'\u2717'}</td></tr>`;
+  });
+  html+='</tbody></table>';
+  $('tableWrap').innerHTML=html;
+
+  const res=$('result');
+  if(firstMiss===-1){
+    res.className='result ok';
+    res.textContent='\u2713 EQUIVALENT \u2014 LHS and RHS match for all '+rows.length+' input combinations.';
+  }else{
+    const r0=rows[firstMiss];
+    const assign=vars.map(v=>v+'='+r0.env[v]).join(', ');
+    res.className='result fail';
+    res.textContent='\u2717 NOT EQUIVALENT \u2014 first difference at '+assign+':  LHS='+r0.vL+', RHS='+r0.vR+' (highlighted row).';
+  }
+}
+
+/* Wire up */
+$('checkBtn').onclick=run;
+[$('lhs'),$('rhs')].forEach(el=>el.addEventListener('input',()=>{$('result').className='result';$('result').textContent='';}));
+
+document.querySelectorAll('.preset-btn').forEach(btn=>{
+  btn.onclick=()=>{
+    $('lhs').value=btn.dataset.lhs;
+    $('rhs').value=btn.dataset.rhs;
+    run();
+  };
+});
+
+// Auto-run on load with default
+$('lhs').value="(A+B)'";
+$('rhs').value="A'·B'";
+run();
+</script>
+</body>
+</html>

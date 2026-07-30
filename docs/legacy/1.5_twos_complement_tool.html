@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2's Complement & Signed Binary — Practice Tool</title>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#1a2233; --panel2:#222c42; --edge:#33415c;
+    --text:#e8edf6; --muted:#94a3c4; --accent:#4f9cff; --accent2:#7c5cff;
+    --true:#22c55e; --false:#64748b; --bad:#ef4444; --warn:#f59e0b;
+    --mono:"SF Mono","Consolas","Cascadia Code",monospace;
+    --font:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.5;padding:24px}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:20px}
+  .wrap{max-width:850px;margin:0 auto}
+  .card{background:var(--panel);border:1px solid var(--edge);border-radius:12px;padding:18px;margin-bottom:18px}
+  .card h2{font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 12px}
+  label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px}
+  input[type=text]{background:var(--panel2);border:1px solid var(--edge);color:var(--text);border-radius:8px;padding:10px 12px;font-size:15px;font-family:var(--mono);text-align:center;width:100%}
+  input[type=text]:focus{outline:none;border-color:var(--accent)}
+  button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer}
+  button:hover{filter:brightness(1.1)}
+  button.ghost{background:var(--panel2);border:1px solid var(--edge);color:var(--text)}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .err{color:var(--bad);font-family:var(--mono);font-size:13px;margin-top:6px;min-height:18px}
+  .hint{color:var(--muted);font-size:12px;margin-top:6px}
+  .step{color:var(--accent);font-weight:800}
+  .bits{display:flex;gap:6px;justify-content:center;margin:12px 0}
+  .bit{width:48px;height:56px;background:var(--panel2);border:2px solid var(--edge);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:.12s;user-select:none}
+  .bit.on{border-color:var(--true);background:rgba(34,197,94,.12)}
+  .bit .idx{font-size:10px;color:var(--muted)}
+  .bit .val{font-size:22px;font-weight:800;font-family:var(--mono)}
+  .bit.on .val{color:var(--true)}
+  .bit.off .val{color:var(--text)}
+  .row{display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  .result{display:none;margin-top:12px;padding:12px 16px;border-radius:8px;font-weight:700;font-size:15px}
+  .result.ok{display:block;background:rgba(34,197,94,.12);color:var(--true);border:1px solid var(--true)}
+  .result.fail{display:block;background:rgba(239,68,68,.12);color:var(--bad);border:1px solid var(--bad)}
+  .result.info{display:block;background:rgba(79,156,255,.10);color:var(--accent);border:1px solid var(--accent)}
+  .box{background:var(--panel2);border:1px solid var(--edge);border-radius:8px;padding:14px;text-align:center;min-width:120px}
+  .box .label{font-size:11px;color:var(--muted)}
+  .box .val{font-size:20px;font-weight:700;font-family:var(--mono);margin-top:4px}
+  table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:13px;margin-top:8px}
+  th,td{border:1px solid var(--edge);padding:5px 8px;text-align:center}
+  th{background:var(--panel2);color:var(--muted);font-weight:600}
+  td.ovf{color:var(--bad);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>2's Complement & Signed Numbers</h1>
+  <div class="sub">Click bits to toggle. Watch the decimal value update in real time. Practice negating numbers.</div>
+
+  <!-- BIT DISPLAY -->
+  <div class="card">
+    <h2><span class="step">1</span> · Set the bits</h2>
+    <div class="hint" style="margin-bottom:8px">Click any bit to toggle it between 0 and 1. MSB is the sign bit in 2's complement.</div>
+    <div class="bits" id="bitDisplay"></div>
+    <div class="row" style="justify-content:center">
+      <button id="setPos">Set to +42</button>
+      <button id="setNeg">Set to -42</button>
+      <button id="clearBits">Clear to 0</button>
+      <button class="ghost" id="negateBtn">Negate (2's complement)</button>
+    </div>
+  </div>
+
+  <!-- VALUES -->
+  <div class="card">
+    <h2><span class="step">2</span> · Interpretations</h2>
+    <div class="row" style="justify-content:center">
+      <div class="box"><div class="label">Unsigned</div><div class="val" id="valUnsigned">0</div></div>
+      <div class="box"><div class="label">Signed (2's comp)</div><div class="val" id="valSigned">0</div></div>
+      <div class="box"><div class="label">Hex</div><div class="val" id="valHex">0x00</div></div>
+    </div>
+  </div>
+
+  <!-- ADDITION -->
+  <div class="card">
+    <h2><span class="step">3</span> · Add two numbers</h2>
+    <div class="hint" style="margin-bottom:8px">Enter two 8-bit signed values and see the binary addition, the result, and whether overflow occurred.</div>
+    <div class="toolbar">
+      <div style="flex:1"><label>First number (decimal, -128..127)</label><input id="addA" value="15"></div>
+      <div style="flex:1"><label>Second number (decimal)</label><input id="addB" value="7"></div>
+    </div>
+    <div class="toolbar"><button id="addBtn">Add</button></div>
+    <div id="addResult"></div>
+  </div>
+
+  <!-- PRACTICE -->
+  <div class="card">
+    <h2><span class="step">4</span> · Practice: negate this number</h2>
+    <div class="hint" style="margin-bottom:8px">A number appears in binary. Set the bits to show its negation (2's complement). Then check your work.</div>
+    <div class="toolbar">
+      <button id="practiceNew">New problem</button>
+      <button class="ghost" id="practiceReveal">Show answer</button>
+      <button id="practiceCheck">Check my answer</button>
+      <button class="ghost" id="practiceSteps">Show steps</button>
+    </div>
+    <div class="row" style="justify-content:center">
+      <div class="box"><div class="label">Original value</div><div class="val" id="origVal">0</div></div>
+      <div class="box"><div class="label" style="color:var(--accent)">Original bits</div><div class="val" id="origBits">00000000</div></div>
+    </div>
+    <div class="result" id="practiceResult"></div>
+    <div id="practiceStepsArea" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const BIT_COUNT=8;
+let bits=new Array(BIT_COUNT).fill(0);
+let origBits=new Array(BIT_COUNT).fill(0);
+
+/* Render bit display */
+function renderBits(){
+  const cont=$('bitDisplay'); cont.innerHTML='';
+  for(let i=0;i<BIT_COUNT;i++){
+    const d=document.createElement('div');
+    d.className='bit '+(bits[i]?'on':'off');
+    d.innerHTML=`<div class="idx">${BIT_COUNT-1-i}</div><div class="val">${bits[i]}</div>`;
+    d.onclick=()=>{bits[i]=bits[i]?0:1;renderBits();updateValues();};
+    cont.appendChild(d);
+  }
+  updateValues();
+}
+
+function toUnsigned(b){
+  let v=0;
+  for(let i=0;i<BIT_COUNT;i++) v=v*2+b[i];
+  return v;
+}
+
+function toSigned(b){
+  const u=toUnsigned(b);
+  if(b[0]===1) return u-(1<<BIT_COUNT);
+  return u;
+}
+
+function fromSigned(v){
+  const b=new Array(BIT_COUNT).fill(0);
+  if(v<0) v+=(1<<BIT_COUNT);
+  for(let i=BIT_COUNT-1;i>=0;i--){b[i]=v&1;v>>=1;}
+  return b;
+}
+
+function updateValues(){
+  const uns=toUnsigned(bits);
+  const sig=toSigned(bits);
+  $('valUnsigned').textContent=uns;
+  $('valSigned').textContent=sig;
+  const hex=uns.toString(16).toUpperCase().padStart(2,'0');
+  $('valHex').textContent='0x'+hex;
+}
+
+/* Presets */
+$('setPos').onclick=()=>{bits=fromSigned(42);renderBits();};
+$('setNeg').onclick=()=>{bits=fromSigned(-42);renderBits();};
+$('clearBits').onclick=()=>{bits=new Array(BIT_COUNT).fill(0);renderBits();};
+$('negateBtn').onclick=()=>{
+  // flip all, add 1
+  for(let i=0;i<BIT_COUNT;i++) bits[i]=bits[i]?0:1;
+  let carry=1;
+  for(let i=BIT_COUNT-1;i>=0;i--){
+    const s=bits[i]+carry;
+    bits[i]=s%2;
+    carry=Math.floor(s/2);
+  }
+  renderBits();
+  // Show step-by-step
+  const r=$('practiceResult');
+  r.className='result info';
+  r.textContent='Negated! Bits flipped, then 1 added.';
+};
+
+/* Addition tool */
+$('addBtn').onclick=()=>{
+  const a=parseInt($('addA').value);
+  const b=parseInt($('addB').value);
+  const res=$('addResult');
+  if(isNaN(a)||isNaN(b)||a<-128||a>127||b<-128||b>127){
+    res.innerHTML='<div class="result fail" style="display:block">Enter valid decimal numbers between -128 and 127.</div>';
+    return;
+  }
+  const ba=fromSigned(a);
+  const bb=fromSigned(b);
+  const sum=a+b;                 // ideal math (may not fit in 8 bits)
+  let carry=0;
+  const br=new Array(BIT_COUNT).fill(0);
+  const cin=new Array(BIT_COUNT).fill(0);
+  let signCarryIn=0;
+  for(let i=BIT_COUNT-1;i>=0;i--){
+    cin[i]=carry;                // carry INTO this column
+    if(i===0) signCarryIn=carry; // carry INTO the sign bit
+    const s=ba[i]+bb[i]+carry;
+    br[i]=s%2;
+    carry=Math.floor(s/2);
+  }
+  const signCarryOut=carry;      // carry OUT of the sign bit
+  const overflow=(signCarryIn!==signCarryOut)?1:0;
+  const wrapped=toSigned(br);    // actual value the 8-bit register holds
+
+  let html='<table><thead><tr><th></th>';
+  for(let i=0;i<BIT_COUNT;i++) html+=`<th>${BIT_COUNT-1-i}</th>`;
+  html+='</tr></thead><tbody>';
+  html+='<tr><td style="color:var(--muted)">Carry</td>'+cin.map(c=>`<td class="${c?'one':'zero'}">${c}</td>`).join('')+'</tr>';
+  html+='<tr><td style="color:var(--muted)">A</td>'+ba.map(b=>`<td class="${b?'one':'zero'}">${b}</td>`).join('')+'</tr>';
+  html+='<tr><td style="color:var(--muted)">B</td>'+bb.map(b=>`<td class="${b?'one':'zero'}">${b}</td>`).join('')+'</tr>';
+  html+='<tr><td style="color:var(--muted)">Sum</td>'+br.map(b=>`<td class="${b?'one':'zero'}">${b}</td>`).join('')+'</tr>';
+  html+='</tbody></table>';
+  html+=`<div style="margin-top:8px">8-bit result = <strong>${wrapped}</strong>`;
+  if(overflow){
+    html+=` &nbsp; <span style="color:var(--bad);font-weight:700">\u26A0 Overflow!</span>`;
+    html+=` &nbsp; <span style="color:var(--muted)">true sum ${sum} does not fit in 8 bits, so it wraps to ${wrapped}</span>`;
+  }else{
+    html+=` &nbsp; <span style="color:var(--muted)">(${a} + ${b} = ${sum})</span>`;
+  }
+  html+='</div><div style="margin-top:4px;color:var(--muted);font-size:12px">Hexadecimal: 0x'+((a&0xFF)).toString(16).toUpperCase().padStart(2,'0')+' + 0x'+((b&0xFF)).toString(16).toUpperCase().padStart(2,'0')+' = 0x'+( (a+b)&0xFF ).toString(16).toUpperCase().padStart(2,'0')+'</div>';
+  res.innerHTML=html;
+};
+
+/* Practice: negate */
+function practiceNew(){
+  const val=Math.floor(Math.random()*128)*((Math.random()<0.5)?1:-1);
+  origBits=fromSigned(val);
+  $('origVal').textContent=val;
+  $('origBits').textContent=origBits.map(b=>''+b).join('');
+  // Clear the bit display
+  bits=new Array(BIT_COUNT).fill(0);
+  renderBits();
+  $('practiceResult').className='result';
+  $('practiceResult').textContent='';
+  $('practiceStepsArea').innerHTML='';
+}
+
+$('practiceNew').onclick=practiceNew;
+$('practiceCheck').onclick=()=>{
+  const r=$('practiceResult');
+  const current=toSigned(bits);
+  const orig=toSigned(origBits);
+  const expected=-orig;
+  if(current===expected){
+    r.className='result ok';
+    r.textContent='\u2713 Correct!  '+orig+' negated is '+expected+'.';
+  }else{
+    r.className='result fail';
+    r.textContent='\u2717 Not yet. The negation of '+orig+' is '+expected+'. You have '+current+'.';
+  }
+};
+function negateSteps(ob){
+  const inv=ob.map(b=>b?0:1);
+  const res=inv.slice(); let carry=1;
+  for(let i=BIT_COUNT-1;i>=0;i--){const s=res[i]+carry;res[i]=s%2;carry=Math.floor(s/2);}
+  const row=(lbl,arr)=>`<tr><td style="color:var(--muted)">${lbl}</td>`+arr.map(b=>`<td class="${b?'one':'zero'}">${b}</td>`).join('')+'</tr>';
+  let html='<table><thead><tr><th></th>';
+  for(let i=0;i<BIT_COUNT;i++) html+=`<th>${BIT_COUNT-1-i}</th>`;
+  html+='</tr></thead><tbody>';
+  html+=row('Original ('+toSigned(ob)+')',ob);
+  html+=row('Invert every bit',inv);
+  html+=row('Add 1 → result ('+toSigned(res)+')',res);
+  html+='</tbody></table>';
+  html+='<div class="hint">2’s complement negation = flip all bits, then add 1.</div>';
+  return html;
+}
+$('practiceSteps').onclick=()=>{ $('practiceStepsArea').innerHTML=negateSteps(origBits); };
+
+$('practiceReveal').onclick=()=>{
+  const orig=toSigned(origBits);
+  const expected=-orig;
+  bits=fromSigned(expected);
+  renderBits();
+  const r=$('practiceResult');
+  r.className='result info';
+  r.textContent='Answer: '+orig+' \u2192 '+expected+'  (shown above in the bit display).';
+};
+
+renderBits();
+practiceNew();
+</script>
+</body>
+</html>

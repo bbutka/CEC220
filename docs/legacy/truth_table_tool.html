@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Truth Table Verifier — Boolean Logic</title>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#1a2233; --panel2:#222c42; --edge:#33415c;
+    --text:#e8edf6; --muted:#94a3c4; --accent:#4f9cff; --accent2:#7c5cff;
+    --true:#22c55e; --false:#64748b; --bad:#ef4444; --warn:#f59e0b;
+    --font: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "SF Mono", "Consolas", "Cascadia Code", monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+       line-height:1.5;padding:24px;}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:20px}
+  .wrap{max-width:960px;margin:0 auto}
+  .card{background:var(--panel);border:1px solid var(--edge);border-radius:12px;
+        padding:18px;margin-bottom:18px}
+  .card h2{font-size:14px;text-transform:uppercase;letter-spacing:.06em;
+           color:var(--muted);margin:0 0 12px}
+  label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px}
+  input[type=text], textarea{width:100%;background:var(--panel2);border:1px solid var(--edge);
+        color:var(--text);border-radius:8px;padding:10px 12px;font-size:15px}
+  input[type=text]{font-family:var(--mono)}
+  textarea{font-family:var(--font);font-size:14px;resize:vertical}
+  input[type=text]:focus, textarea:focus{outline:none;border-color:var(--accent)}
+  .frow{display:flex;gap:14px;flex-wrap:wrap}
+  .frow > div{flex:1;min-width:200px}
+  select{background:var(--panel2);border:1px solid var(--edge);color:var(--text);
+         border-radius:8px;padding:8px 10px;font-size:14px}
+  button{background:var(--accent);color:#fff;border:none;border-radius:8px;
+         padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer}
+  button:hover{filter:brightness(1.1)}
+  button.ghost{background:var(--panel2);border:1px solid var(--edge);color:var(--text)}
+  button.alt{background:var(--accent2)}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .err{color:var(--bad);font-family:var(--mono);font-size:13px;margin-top:8px;min-height:18px}
+  .hint{color:var(--muted);font-size:12px;margin-top:6px}
+  code{background:var(--panel2);padding:1px 6px;border-radius:4px;font-family:var(--mono)}
+
+  /* interactive inputs */
+  .inputs{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+  .toggle{background:var(--panel2);border:1px solid var(--edge);border-radius:10px;
+          padding:12px 16px;min-width:110px;text-align:center;cursor:pointer;
+          user-select:none;transition:.12s}
+  .toggle .vn{font-family:var(--mono);font-size:16px;font-weight:700}
+  .toggle .bit{font-size:28px;font-weight:800;margin-top:2px}
+  .toggle.on{border-color:var(--true);color:var(--true)}
+  .toggle.off{border-color:var(--edge);color:var(--muted)}
+
+  /* big output */
+  .output{margin-top:16px;border-radius:14px;padding:28px;text-align:center;
+          border:2px solid var(--edge);background:var(--panel2)}
+  .output.true{border-color:var(--true);background:rgba(34,197,94,.10)}
+  .output.false{border-color:var(--false);background:rgba(100,116,139,.10)}
+  .output .icon{font-size:64px;line-height:1}
+  .output .verdict{font-size:26px;font-weight:800;margin-top:8px}
+  .output.true .verdict{color:var(--true)}
+  .output.false .verdict{color:var(--muted)}
+  .output .expr{font-family:var(--mono);color:var(--muted);font-size:13px;margin-top:10px}
+
+  /* truth table */
+  table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:14px}
+  th,td{border:1px solid var(--edge);padding:7px 10px;text-align:center}
+  th{background:var(--panel2);color:var(--muted);font-weight:600}
+  td.one{color:var(--true);font-weight:700}
+  td.zero{color:var(--false)}
+  td.out{background:rgba(79,156,255,.10);font-weight:700}
+  th.out{background:rgba(79,156,255,.18)}
+  tr.hl{background:rgba(79,156,255,.12)}
+  .exp-in{width:46px;text-align:center;background:var(--panel);border:1px solid var(--edge);
+          color:var(--text);border-radius:6px;padding:5px;font-family:var(--mono);font-size:15px}
+  .exp-in:focus{outline:none;border-color:var(--accent)}
+  .match{color:var(--true);font-weight:700}
+  .mismatch{color:var(--bad);font-weight:700}
+  .summary{margin-top:12px;padding:10px 14px;border-radius:8px;font-weight:600}
+  .summary.ok{background:rgba(34,197,94,.12);color:var(--true)}
+  .summary.no{background:rgba(239,68,68,.12);color:var(--bad)}
+  .summary.neutral{background:var(--panel2);color:var(--muted)}
+  details{margin-top:10px}
+  summary{cursor:pointer;color:var(--accent);font-size:13px}
+  .legend{font-size:12px;color:var(--muted);line-height:1.8}
+  .step{color:var(--accent);font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Truth Table Verifier</h1>
+  <div class="sub">Fill the truth table as a class → students use AI to get the equation → type it in → watch the output → verify it matches.</div>
+
+  <!-- 1 · WORD PROBLEM -->
+  <div class="card">
+    <h2><span class="step">1</span> · The word problem</h2>
+    <div class="toolbar">
+      <label style="margin:0">Example:</label>
+      <select id="exampleSel"></select>
+      <button class="ghost" id="saveEx">Save as new</button>
+    </div>
+    <label>Read this to the class — students give it to an AI to derive the equation</label>
+    <textarea id="desc" rows="4"></textarea>
+    <div class="frow" style="margin-top:14px">
+      <div>
+        <label>Output name (what the equation decides)</label>
+        <input type="text" id="outName" placeholder="Lunch">
+      </div>
+      <div>
+        <label>Input variables (comma-separated)</label>
+        <input type="text" id="vars" placeholder="A, B, C, D">
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 · CLASS TRUTH TABLE -->
+  <div class="card">
+    <h2><span class="step">2</span> · Fill in the truth table (go around the room)</h2>
+    <div class="hint" style="margin-bottom:12px">For each row, type the value the class votes on into the <b>Class answer</b> column: <code>0</code>, <code>1</code>, or <code>X</code> for a don't-care. No equation needed yet.</div>
+    <div id="classTable"></div>
+    <div class="toolbar" style="margin-top:12px;margin-bottom:0">
+      <button class="ghost" id="clearExp">Clear class answers</button>
+      <button class="ghost" id="fillDemo" title="For your own prep only">Auto-fill (answer key)</button>
+    </div>
+  </div>
+
+  <!-- 3 · EQUATION + TRY IT -->
+  <div class="card">
+    <h2><span class="step">3</span> · Type in the AI-generated equation &amp; try it</h2>
+    <label>Boolean equation</label>
+    <input type="text" id="eqn" placeholder="e.g.  A + BC + BD + CD   or   A OR (B AND C) ...">
+    <div class="err" id="err"></div>
+    <details>
+      <summary>Accepted syntax (click)</summary>
+      <div class="legend">
+        AND: <code>·</code> <code>*</code> <code>&amp;</code> <code>AND</code> or just write them together <code>BC</code><br>
+        OR: <code>+</code> <code>|</code> <code>OR</code> &nbsp;·&nbsp;
+        NOT: <code>!</code> <code>~</code> <code>NOT</code> &nbsp;or postfix <code>A'</code> &nbsp;·&nbsp;
+        XOR: <code>^</code> <code>XOR</code><br>
+        Grouping: <code>( )</code> &nbsp;·&nbsp; Constants: <code>0</code> <code>1</code> &nbsp;·&nbsp;
+        Precedence: NOT → AND → XOR → OR. Names are case-insensitive.
+      </div>
+    </details>
+    <div class="inputs" id="inputs" style="margin-top:16px"></div>
+    <div class="hint">Click a variable to toggle it between 0 and 1.</div>
+    <div class="output" id="output">
+      <div class="icon">❔</div>
+      <div class="verdict">enter an equation above</div>
+      <div class="expr"></div>
+    </div>
+  </div>
+
+  <!-- 4 · VERIFY -->
+  <div class="card">
+    <h2><span class="step">4</span> · Verify the equation against the class truth table</h2>
+    <div class="toolbar">
+      <button id="checkBtn">Check equation vs. class answers</button>
+      <button class="ghost" id="hideBtn">Hide answer column</button>
+    </div>
+    <div class="hint">Reveals the equation's computed output next to the class answers and flags every row ✓ / ✗. Scroll up to Step 2 to show the class the marked-up table.</div>
+    <div class="summary neutral" id="summary" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+/* ---------- Boolean expression parser (recursive descent) ----------
+   Precedence low→high:  OR  <  XOR  <  AND  <  NOT/atom
+   Supports juxtaposition (BC = B AND C) and postfix apostrophe (A' = NOT A). */
+
+function tokenize(src, varSet, declared){
+  const t=[]; let i=0; const s=src;
+  const isIdStart=c=>/[A-Za-z_]/.test(c);
+  const isId=c=>/[A-Za-z0-9_]/.test(c);
+  while(i<s.length){
+    const c=s[i];
+    if(/\s/.test(c)){i++;continue;}
+    if(c==='('){t.push({k:'('});i++;continue;}
+    if(c===')'){t.push({k:')'});i++;continue;}
+    if(c==="'"||c==='’'){t.push({k:'post_not'});i++;continue;}
+    if(c==='+'||c==='|'){t.push({k:'or'});i++;continue;}
+    if(c==='^'){t.push({k:'xor'});i++;continue;}
+    if(c==='·'||c==='*'||c==='&'||c==='∧'){t.push({k:'and'});i++;continue;}
+    if(c==='!'||c==='~'||c==='¬'){t.push({k:'not'});i++;continue;}
+    if(c==='0'){t.push({k:'const',v:0});i++;continue;}
+    if(c==='1'){t.push({k:'const',v:1});i++;continue;}
+    if(isIdStart(c)){
+      let j=i+1; while(j<s.length&&isId(s[j]))j++;
+      const w=s.slice(i,j); const up=w.toUpperCase();
+      i=j;
+      if(up==='AND'){t.push({k:'and'});continue;}
+      if(up==='OR'){t.push({k:'or'});continue;}
+      if(up==='NOT'){t.push({k:'not'});continue;}
+      if(up==='XOR'){t.push({k:'xor'});continue;}
+      // If it's a declared variable, keep whole. Otherwise, if it's several
+      // declared single-letter variables written together (BC = B·C), split them.
+      if(declared && !declared.has(up) && up.length>1 &&
+         [...up].every(ch=>declared.has(ch))){
+        [...up].forEach(ch=>{ t.push({k:'var',v:ch}); varSet.add(ch); });
+        continue;
+      }
+      t.push({k:'var',v:up}); varSet.add(up); continue;
+    }
+    throw new Error("Unexpected character: '"+c+"'");
+  }
+  return t;
+}
+
+function parse(src, declared){
+  const varSet=new Set();
+  const tk=tokenize(src,varSet,declared);
+  let p=0;
+  const peek=()=>tk[p];
+  const next=()=>tk[p++];
+  const eat=k=>{ if(!peek()||peek().k!==k) throw new Error("Expected '"+k+"'"); return next(); };
+
+  function parseOr(){
+    let n=parseXor();
+    while(peek()&&peek().k==='or'){next(); n={op:'or',a:n,b:parseXor()};}
+    return n;
+  }
+  function parseXor(){
+    let n=parseAnd();
+    while(peek()&&peek().k==='xor'){next(); n={op:'xor',a:n,b:parseAnd()};}
+    return n;
+  }
+  function startsAtom(x){ return x&&(x.k==='var'||x.k==='const'||x.k==='('||x.k==='not'); }
+  function parseAnd(){
+    let n=parseNot();
+    while(peek()&&(peek().k==='and'||startsAtom(peek()))){
+      if(peek().k==='and') next();          // explicit AND
+      n={op:'and',a:n,b:parseNot()};        // (juxtaposition falls through)
+    }
+    return n;
+  }
+  function parseNot(){
+    if(peek()&&peek().k==='not'){next(); return {op:'not',a:parseNot()};}
+    return parsePostfix();
+  }
+  function parsePostfix(){
+    let n=parseAtom();
+    while(peek()&&peek().k==='post_not'){next(); n={op:'not',a:n};}
+    return n;
+  }
+  function parseAtom(){
+    const x=peek();
+    if(!x) throw new Error("Unexpected end of equation");
+    if(x.k==='('){next(); const n=parseOr(); eat(')'); return n;}
+    if(x.k==='var'){next(); return {op:'var',name:x.v};}
+    if(x.k==='const'){next(); return {op:'const',v:x.v};}
+    throw new Error("Unexpected token '"+x.k+"'");
+  }
+  const tree=parseOr();
+  if(p<tk.length) throw new Error("Unexpected extra input");
+  return {tree,vars:varSet};
+}
+
+function evalTree(n,env){
+  switch(n.op){
+    case 'const': return n.v;
+    case 'var':   return env[n.name]?1:0;
+    case 'not':   return evalTree(n.a,env)?0:1;
+    case 'and':   return (evalTree(n.a,env)&&evalTree(n.b,env))?1:0;
+    case 'or':    return (evalTree(n.a,env)||evalTree(n.b,env))?1:0;
+    case 'xor':   return (evalTree(n.a,env)^evalTree(n.b,env))?1:0;
+  }
+}
+
+/* ---------- Examples (variables & word problems from slides 1.3) ---------- */
+const EXAMPLES = {
+  "Lunch (slide 16)": {out:"Lunch", vars:"A, B, C, D",
+    desc:"A group of people are deciding when to eat lunch. Each input (A, B, C, D) is 1 if that person wants to eat lunch. If 2 or more people want to eat lunch, the group goes to lunch. However, person A is the boss: if A wants to go to lunch, then everyone goes. The output Lunch is 1 if the group goes to lunch.",
+    key:(A,B,C,D)=> A ? 1 : ((A+B+C+D)>=2?1:0)},
+  "I'm a Bill (slide 23)": {out:"Law", vars:"S, H, V, R",
+    desc:"A bill becomes law as follows. S = 1 if the senate has a majority, H = 1 if the house has a majority, V = 1 if the president vetoes, R = 1 if both the house and senate have a 2/3 majority. If both chambers pass the bill and the president does not veto it, it becomes law. If the president vetoes it, it still becomes law only if there is a 2/3 override in both chambers (R = 1). The output Law is 1 if the bill becomes law.",
+    key:(S,H,V,R)=> (S&&H&&(!V||R))?1:0},
+};
+
+/* ---------- App state ---------- */
+let inputBits={};   // {VARNAME: 0/1}
+let expected={};    // {rowIndex: 0 | 1 | 'X'}
+let revealed=false; // whether the computed output column is shown
+
+const $=id=>document.getElementById(id);
+const currentVars=()=> $('vars').value.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+
+function compile(){
+  const src=$('eqn').value.trim();
+  $('err').textContent="";
+  if(!src) return null;
+  try{
+    const declared=new Set(currentVars());
+    const {tree,vars}=parse(src, declared);
+    for(const v of vars){
+      if(!declared.has(v)) throw new Error("Variable '"+v+"' is not in your input list");
+    }
+    return tree;
+  }catch(e){ $('err').textContent="⚠ "+e.message; return null; }
+}
+
+function buildRows(){
+  const vars=currentVars(); const n=vars.length; const rows=[];
+  for(let i=0;i<(1<<n);i++){
+    const env={};
+    vars.forEach((v,idx)=>{ env[v]=(i>>(n-1-idx))&1; });   // first variable = MSB
+    rows.push(env);
+  }
+  return {vars,rows};
+}
+
+function renderInputs(){
+  const vars=currentVars(); const box=$('inputs'); box.innerHTML="";
+  vars.forEach(v=>{
+    if(!(v in inputBits)) inputBits[v]=0;
+    const d=document.createElement('div');
+    d.className='toggle '+(inputBits[v]?'on':'off');
+    d.innerHTML=`<div class="vn">${v}</div><div class="bit">${inputBits[v]}</div>`;
+    d.onclick=()=>{ inputBits[v]=inputBits[v]?0:1; renderInputs(); evaluateLive(); if(revealed) renderTable(); };
+    box.appendChild(d);
+  });
+  Object.keys(inputBits).forEach(k=>{ if(!vars.includes(k)) delete inputBits[k]; });
+}
+
+function evaluateLive(){
+  const tree=compile(); const out=$('output');
+  const name=($('outName').value.trim()||'OUTPUT');
+  if(!tree){
+    out.className='output';
+    out.querySelector('.icon').textContent='❔';
+    out.querySelector('.verdict').textContent='enter a valid equation above';
+    out.querySelector('.expr').textContent=''; return;
+  }
+  const val=evalTree(tree,inputBits);
+  out.className='output '+(val?'true':'false');
+  out.querySelector('.icon').textContent = val?'✅':'⛔';
+  out.querySelector('.verdict').textContent = name+' = '+val;
+  out.querySelector('.expr').textContent = currentVars().map(v=>v+'='+inputBits[v]).join('  ');
+}
+
+function inputMatchesRow(env){ return currentVars().every(v=>inputBits[v]===env[v]); }
+
+/* One table, drawn into Step 2. `revealed` decides whether the equation's
+   computed output column + ✓/✗ marks are shown. */
+function renderTable(){
+  const wrap=$('classTable'); const summary=$('summary');
+  const vars=currentVars();
+  if(!vars.length){ wrap.innerHTML='<div class="hint">Add input variables in Step 1 to build the table.</div>'; summary.style.display='none'; return; }
+  const {rows}=buildRows();
+  const outName=($('outName').value.trim()||'OUT');
+  const tree = revealed ? compile() : null;
+  if(revealed && !tree){ revealed=false; }   // can't reveal without a valid equation
+
+  let html='<table><thead><tr>';
+  vars.forEach(v=>html+=`<th>${v}</th>`);
+  if(revealed) html+=`<th class="out">${outName} (equation)</th>`;
+  html+=`<th>Class answer</th>`;
+  if(revealed) html+=`<th>✓ ?</th>`;
+  html+='</tr></thead><tbody>';
+
+  let matches=0, filled=0;
+  rows.forEach((env,i)=>{
+    html+=`<tr class="${inputMatchesRow(env)?'hl':''}" data-i="${i}">`;
+    vars.forEach(v=>html+=`<td class="${env[v]?'one':'zero'}">${env[v]}</td>`);
+    let val=null;
+    if(revealed){ val=evalTree(tree,env); html+=`<td class="out ${val?'one':'zero'}">${val}</td>`; }
+    const e=expected[i];
+    const shown=(e===0||e===1||e==='X')?e:'';
+    html+=`<td><input class="exp-in" data-i="${i}" maxlength="1" value="${shown}"></td>`;
+    if(revealed){
+      let mark='';
+      if(shown!==''){
+        filled++;
+        if(shown==='X'){mark='<span class="match" title="don\'t care">—</span>';matches++;}
+        else if(Number(shown)===val){mark='<span class="match">✓</span>';matches++;}
+        else mark='<span class="mismatch">✗</span>';
+      }
+      html+=`<td>${mark}</td>`;
+    }
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
+
+  wrap.querySelectorAll('.exp-in').forEach(inp=>{
+    inp.oninput=()=>{
+      const i=+inp.dataset.i; const v=inp.value.trim().toUpperCase();
+      if(v==='X') expected[i]='X';
+      else expected[i]=(v==='0'||v==='1')?Number(v):null;
+    };
+  });
+
+  if(revealed){
+    summary.style.display='block';
+    const total=rows.length;
+    if(filled===0){ summary.className='summary neutral'; summary.textContent='Fill in the Class answer column first, then check.'; }
+    else if(matches===filled && filled===total){ summary.className='summary ok'; summary.textContent=`✓ Verified — the equation matches all ${total} class answers.`; }
+    else if(matches===filled){ summary.className='summary ok'; summary.textContent=`✓ ${matches}/${filled} filled rows match (fill all ${total} for full verification).`; }
+    else{ summary.className='summary no'; summary.textContent=`✗ ${filled-matches} of ${filled} filled rows do NOT match the equation.`; }
+  } else summary.style.display='none';
+}
+
+/* ---------- Examples ---------- */
+function refreshExampleSel(){
+  const sel=$('exampleSel'); sel.innerHTML='';
+  Object.keys(EXAMPLES).forEach(k=>{ const o=document.createElement('option'); o.value=k; o.textContent=k; sel.appendChild(o); });
+}
+function loadExample(k){
+  const e=EXAMPLES[k]; if(!e) return;
+  $('outName').value=e.out; $('vars').value=e.vars; $('desc').value=e.desc||''; $('eqn').value='';
+  inputBits={}; expected={}; revealed=false;
+  renderInputs(); evaluateLive(); renderTable();
+}
+
+/* ---------- Wire up ---------- */
+['outName','vars'].forEach(id=> $(id).addEventListener('input',()=>{ renderInputs(); evaluateLive(); renderTable(); }));
+$('eqn').addEventListener('input',()=>{ evaluateLive(); if(revealed) renderTable(); });
+$('exampleSel').addEventListener('change',e=>loadExample(e.target.value));
+$('saveEx').onclick=()=>{
+  const name=prompt('Name this example:'); if(!name) return;
+  EXAMPLES[name]={out:$('outName').value,vars:$('vars').value,desc:$('desc').value};
+  refreshExampleSel(); $('exampleSel').value=name;
+};
+$('checkBtn').onclick=()=>{ revealed=true; renderTable(); if(!compile()) $('err').textContent='⚠ Enter a valid equation in Step 3 first.'; };
+$('hideBtn').onclick=()=>{ revealed=false; renderTable(); };
+$('clearExp').onclick=()=>{ expected={}; renderTable(); };
+$('fillDemo').onclick=()=>{
+  const key=EXAMPLES[$('exampleSel').value] && EXAMPLES[$('exampleSel').value].key;
+  const {vars,rows}=buildRows();
+  if(!key){ alert('No answer key for this custom example — type a correct equation in Step 3 and use Check instead.'); return; }
+  rows.forEach((env,i)=>{ expected[i]=key(...vars.map(v=>env[v])); });
+  revealed=false; renderTable();
+};
+
+refreshExampleSel();
+loadExample("Lunch (slide 16)");
+</script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Number Base Converter — Binary, Octal, Decimal, Hex</title>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#1a2233; --panel2:#222c42; --edge:#33415c;
+    --text:#e8edf6; --muted:#94a3c4; --accent:#4f9cff; --accent2:#7c5cff;
+    --true:#22c55e; --false:#64748b; --bad:#ef4444; --warn:#f59e0b;
+    --mono:"SF Mono","Consolas","Cascadia Code",monospace;
+    --font:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);line-height:1.5;padding:24px}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:20px}
+  .wrap{max-width:800px;margin:0 auto}
+  .card{background:var(--panel);border:1px solid var(--edge);border-radius:12px;padding:18px;margin-bottom:18px}
+  .card h2{font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 12px}
+  label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px}
+  .mono{font-family:var(--mono);font-size:15px}
+  input{background:var(--panel2);border:1px solid var(--edge);color:var(--text);border-radius:8px;padding:10px 12px;font-size:15px;font-family:var(--mono);width:100%}
+  input:focus{outline:none;border-color:var(--accent)}
+  button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer}
+  button:hover{filter:brightness(1.1)}
+  button.ghost{background:var(--panel2);border:1px solid var(--edge);color:var(--text)}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .err{color:var(--bad);font-family:var(--mono);font-size:13px;margin-top:6px;min-height:18px}
+  .hint{color:var(--muted);font-size:12px;margin-top:4px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:600px){.grid{grid-template-columns:1fr}}
+  .box{background:var(--panel2);border:1px solid var(--edge);border-radius:8px;padding:14px}
+  .box .val{font-size:28px;font-weight:800;font-family:var(--mono);margin-top:6px;word-break:break-all}
+  .box .badge{font-size:11px;color:var(--muted);margin-bottom:2px}
+  .result{display:none;margin-top:12px;padding:12px 16px;border-radius:8px;font-weight:700;font-size:15px}
+  .result.ok{display:block;background:rgba(34,197,94,.12);color:var(--true);border:1px solid var(--true)}
+  .result.fail{display:block;background:rgba(239,68,68,.12);color:var(--bad);border:1px solid var(--bad)}
+  .step{color:var(--accent);font-weight:800}
+  .ans{display:flex;gap:8px;align-items:center}
+  .ans input{flex:1}
+  .hint{color:var(--muted);font-size:12px;margin-top:6px}
+  table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:13px;margin-top:8px}
+  th,td{border:1px solid var(--edge);padding:5px 8px;text-align:center}
+  th{background:var(--panel2);color:var(--muted);font-weight:600}
+  td.one{color:var(--true);font-weight:700}
+  td.zero{color:var(--false)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Number Base Converter</h1>
+  <div class="sub">Enter a number in any base — see it in all four at once. Or practice mode: fill in the blanks.</div>
+
+  <!-- FREE CONVERT -->
+  <div class="card">
+    <h2><span class="step">1</span> · Free convert (type anywhere)</h2>
+    <div class="grid">
+      <div class="box"><div class="badge">Binary (base 2)</div><div class="val" id="d2">0</div></div>
+      <div class="box"><div class="badge">Octal (base 8)</div><div class="val" id="d8">0</div></div>
+      <div class="box"><div class="badge">Decimal (base 10)</div><div class="val" id="d10">0</div></div>
+      <div class="box"><div class="badge">Hexadecimal (base 16)</div><div class="val" id="d16">0</div></div>
+    </div>
+    <div class="grid" style="margin-top:12px">
+      <div><label>Type in any base</label><input id="freeIn" placeholder="e.g.  1011  or  0xFF  or  0o17"></div>
+      <div><label>Base</label><select id="freeBase" style="background:var(--panel2);border:1px solid var(--edge);color:var(--text);border-radius:8px;padding:10px;font-size:15px;width:100%">
+        <option value="0">Auto-detect</option>
+        <option value="2">Binary</option>
+        <option value="8">Octal</option>
+        <option value="10">Decimal</option>
+        <option value="16">Hexadecimal</option>
+      </select></div>
+    </div>
+  </div>
+
+  <!-- PRACTICE -->
+  <div class="card">
+    <h2><span class="step">2</span> · Practice mode (fill the blanks)</h2>
+    <div class="hint" style="margin-bottom:12px">A random value appears in one base. Convert it and fill in the other three boxes, then check your work.</div>
+    <div class="toolbar">
+      <button id="newProb">New problem</button>
+      <button class="ghost" id="revealBtn">Reveal answer</button>
+    </div>
+    <div id="practiceArea" style="margin-top:12px">
+      <div class="grid">
+        <div><label>Binary <span style="color:var(--muted)">(2)</span></label><input id="p2" placeholder="binary"></div>
+        <div><label>Octal <span style="color:var(--muted)">(8)</span></label><input id="p8" placeholder="octal"></div>
+        <div><label>Decimal <span style="color:var(--muted)">(10)</span></label><input id="p10" placeholder="decimal"></div>
+        <div><label>Hexadecimal <span style="color:var(--muted)">(16)</span></label><input id="p16" placeholder="hex"></div>
+      </div>
+      <div class="toolbar" style="margin-top:12px">
+        <button id="checkPractice">Check answers</button>
+        <button class="ghost" id="showSteps">Show worked steps</button>
+      </div>
+      <div class="result" id="practiceResult"></div>
+      <div id="stepsArea" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- CONVERSION TABLE -->
+  <div class="card">
+    <h2><span class="step">3</span> · Quick reference: 4-bit values</h2>
+    <div id="refTable"></div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const bases=['2','8','10','16'];
+const ids=['d2','d8','d10','d16'];
+const pids=['p2','p8','p10','p16'];
+const labels=['binary','octal','decimal','hex'];
+
+/* Convert integer to any base */
+function toBaseStr(n, base){
+  if(base===10) return String(n);
+  if(base===16) return n.toString(16).toUpperCase();
+  if(base===8) return n.toString(8);
+  if(base===2) return n.toString(2);
+  return '';
+}
+
+/* Parse a string in given base */
+function digitsOk(s, base){
+  const re = base===2 ? /^[01]+$/ : base===8 ? /^[0-7]+$/ : base===10 ? /^[0-9]+$/ : /^[0-9a-fA-F]+$/;
+  return re.test(s);
+}
+function parseAny(s, base){
+  s=s.trim().replace(/_/g,'');
+  if(!s) return NaN;
+  if(base===0){
+    let b=10, body=s;
+    if(/^0x/i.test(s)){b=16;body=s.slice(2);}
+    else if(/^0o/i.test(s)){b=8;body=s.slice(2);}
+    else if(/^0b/i.test(s)){b=2;body=s.slice(2);}
+    else if(/^[01]+$/.test(s)){b=2;}
+    if(!body||!digitsOk(body,b)) return NaN;   // reject invalid digits instead of truncating
+    return parseInt(body,b);
+  }
+  if(!digitsOk(s,base)) return NaN;
+  return parseInt(s,base);
+}
+
+function updateFree(){
+  const s=$('freeIn').value;
+  const base=parseInt($('freeBase').value);
+  const val=parseAny(s,base);
+  if(isNaN(val)||val<0){bases.forEach((b,i)=>{$(ids[i]).textContent='?';});return;}
+  bases.forEach((b,i)=>{$(ids[i]).textContent=toBaseStr(val,parseInt(b));});
+}
+
+$('freeIn').oninput=updateFree;
+$('freeBase').onchange=updateFree;
+
+/* Practice */
+let answer={};
+
+function newProblem(){
+  const val=Math.floor(Math.random()*256);
+  const srcBase=parseInt(bases[Math.floor(Math.random()*4)]);
+  answer={val:val,srcBase:srcBase};
+  $('practiceResult').className='result';
+  $('practiceResult').textContent='';
+  $('stepsArea').innerHTML='';
+  // Fill the source base, clear others
+  const srcIdx=bases.indexOf(String(srcBase));
+  const srcStr=toBaseStr(val,srcBase);
+  pids.forEach((pid,i)=>{
+    const inp=$(pid);
+    if(i===srcIdx){inp.value=srcStr;inp.readOnly=true;inp.style.color='var(--accent)';}
+    else{inp.value='';inp.readOnly=false;inp.style.color='';}
+  });
+}
+
+$('newProb').onclick=newProblem;
+$('revealBtn').onclick=()=>{
+  if(!answer.val&&answer.val!==0) return;
+  pids.forEach((pid,i)=>{
+    const inp=$(pid);
+    if(!inp.readOnly){
+      inp.value=toBaseStr(answer.val,parseInt(bases[i]));
+      inp.style.color='var(--muted)';
+    }
+  });
+  $('practiceResult').className='result ok';
+  $('practiceResult').textContent='Answer revealed.';
+};
+
+$('checkPractice').onclick=()=>{
+  if(!answer.val&&answer.val!==0){newProblem();return;}
+  const r=$('practiceResult');
+  let allOk=true;
+  pids.forEach((pid,i)=>{
+    const inp=$(pid);
+    if(inp.readOnly) return;
+    const expected=toBaseStr(answer.val,parseInt(bases[i]));
+    const got=parseAny(inp.value,parseInt(bases[i]));
+    if(isNaN(got)){
+      allOk=false;
+      inp.style.borderColor='var(--warn)';
+    }else if(got===answer.val){
+      inp.style.borderColor='';
+    }else{
+      allOk=false;
+      inp.style.borderColor='var(--bad)';
+    }
+  });
+  if(allOk){
+    r.className='result ok';
+    r.textContent='\u2713 All correct!';
+  }else{
+    r.className='result fail';
+    r.textContent='\u2717 Some answers are wrong (highlighted in red) or missing (highlighted in yellow).';
+  }
+};
+
+/* Worked steps: repeated division + positional expansion */
+function divTable(val,base,name){
+  let rows=[], n=val;
+  if(n===0) rows.push([0,0,0]);
+  while(n>0){ rows.push([n, Math.floor(n/base), n%base]); n=Math.floor(n/base); }
+  const digits=rows.map(r=>r[2].toString(base).toUpperCase()).reverse().join('')||'0';
+  let html=`<div style="margin-top:10px"><b>Decimal ${val} → ${name} (repeatedly divide by ${base}, keep remainders)</b>`;
+  html+='<table><thead><tr><th>value</th><th>÷'+base+' quotient</th><th>remainder</th></tr></thead><tbody>';
+  rows.forEach(r=>{html+=`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="one">${r[2].toString(base).toUpperCase()}</td></tr>`;});
+  html+='</tbody></table>';
+  html+=`<div class="hint">Read the remainders bottom → top: <b>${digits}</b></div></div>`;
+  return html;
+}
+function expandBinary(val){
+  const bin=val.toString(2);
+  const bits=[...bin]; const n=bits.length;
+  const terms=bits.map((b,i)=>`${b}×2<sup>${n-1-i}</sup>`);
+  const nz=bits.map((b,i)=>b==='1'?(1<<(n-1-i)):0).filter(x=>x).join(' + ')||'0';
+  return `<div style="margin-top:10px"><b>Binary ${bin} → Decimal (positional expansion)</b><div class="hint">${terms.join(' + ')} = ${nz} = <b>${val}</b></div></div>`;
+}
+function buildSteps(val){
+  return divTable(val,2,'Binary')+divTable(val,8,'Octal')+divTable(val,16,'Hex')+expandBinary(val);
+}
+$('showSteps').onclick=()=>{
+  if(!answer.val&&answer.val!==0){$('stepsArea').innerHTML='';return;}
+  $('stepsArea').innerHTML=buildSteps(answer.val);
+};
+
+/* Reference table */
+function buildRefTable(){
+  let html='<table><thead><tr><th>Decimal</th><th>Binary</th><th>Octal</th><th>Hex</th></tr></thead><tbody>';
+  for(let i=0;i<16;i++){
+    html+=`<tr><td>${i}</td><td>${toBaseStr(i,2).padStart(4,'0')}</td><td>${toBaseStr(i,8)}</td><td>${toBaseStr(i,16)}</td></tr>`;
+  }
+  html+='</tbody></table>';
+  $('refTable').innerHTML=html;
+}
+
+buildRefTable();
+updateFree();
+newProblem();
+</script>
+</body>
+</html>
