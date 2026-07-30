@@ -22,18 +22,6 @@ const presets = {
     callout:
       "Add from the least-significant column. A column total of 2 or 3 writes one result bit and carries 1 into the next position—the same positional rule used for time and decimal arithmetic.",
   },
-  "unsigned-borrow-chain": {
-    width: 4,
-    base: 10,
-    interpretation: "unsigned",
-    operation: "subtract",
-    subtractionMethod: "borrow",
-    a: "10",
-    b: "6",
-    calloutTitle: "Borrowing is regrouping by the current base.",
-    callout:
-      "When a binary column is too small, borrow 1 from the next position. That borrowed 1 has a value of 2 in the current column, just as a borrowed ten contributes 10 in decimal.",
-  },
   "borrow-across-zeros": {
     width: 4,
     base: 10,
@@ -232,6 +220,8 @@ function applyPreset(name) {
     button.classList.toggle("active", button.dataset.preset === name);
   });
   byId("customProblem").classList.remove("active");
+  byId("customSubtraction").classList.remove("active");
+  byId("customEntryNote").hidden = true;
 
   const callout = byId("conceptCallout");
   callout.innerHTML = "";
@@ -242,9 +232,19 @@ function applyPreset(name) {
   loadProblem();
 }
 
-function startCustomProblem() {
+function startCustomProblem(subtraction = false) {
   all("[data-preset]").forEach((button) => button.classList.remove("active"));
-  byId("customProblem").classList.add("active");
+  byId("customProblem").classList.toggle("active", !subtraction);
+  byId("customSubtraction").classList.toggle("active", subtraction);
+  byId("customEntryNote").hidden = false;
+  if (subtraction) {
+    byId("width").value = "4";
+    byId("base").value = "10";
+    setRadio("interpretation", "unsigned");
+    setRadio("operation", "subtract");
+    setRadio("subtractionMethod", "borrow");
+    updateSubtractionControls();
+  }
   byId("operandA").value = "";
   byId("operandB").value = "";
   const error = byId("setupError");
@@ -254,11 +254,15 @@ function startCustomProblem() {
   const callout = byId("conceptCallout");
   callout.innerHTML = "";
   const title = document.createElement("strong");
-  title.textContent = "Build and test your own arithmetic problem.";
+  title.textContent = subtraction
+    ? "Enter your own unsigned subtraction problem."
+    : "Build and test your own arithmetic problem.";
   callout.append(
     title,
     document.createTextNode(
-      "Choose the width, input base, interpretation, and operation. Enter A and B, then select “Load this problem.”",
+      subtraction
+        ? "Type any A and B values—including 8 and 1—then select “Load this problem.”"
+        : "Choose the width, input base, interpretation, and operation. Enter A and B, then select “Load this problem.”",
     ),
   );
   byId("operandA").focus();
@@ -1451,7 +1455,10 @@ all("[data-preset]").forEach((button) => {
   button.addEventListener("click", () => applyPreset(button.dataset.preset));
 });
 
-byId("customProblem").addEventListener("click", startCustomProblem);
+byId("customProblem").addEventListener("click", () => startCustomProblem(false));
+byId("customSubtraction").addEventListener("click", () =>
+  startCustomProblem(true),
+);
 byId("borrowProcess").addEventListener("click", handleBorrowGuideClick);
 
 all("[data-mode-button]").forEach((button) => {

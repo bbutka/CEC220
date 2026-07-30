@@ -8,7 +8,7 @@
       content="A guided CEC220 workbench for carries, borrows, two's complement, overflow, underflow, and fixed-width arithmetic."
     >
     <title>Fixed-Width Arithmetic · CEC220 Logic Studio</title>
-    <link rel="stylesheet" href="../shared/styles.css?v=20260730g">
+    <link rel="stylesheet" href="../shared/styles.css?v=20260730h">
   </head>
   <body class="tool-page" data-mode="learn">
     <header class="site-header">
@@ -62,8 +62,8 @@
                 <button class="preset-button active" type="button" data-preset="unsigned-carry-chain">
                   11 + 6: follow the carry chain
                 </button>
-                <button class="preset-button" type="button" data-preset="unsigned-borrow-chain">
-                  10 − 6: follow the borrow chain
+                <button class="custom-problem-button" type="button" id="customSubtraction">
+                  Enter my own A − B problem
                 </button>
                 <button class="preset-button" type="button" data-preset="borrow-across-zeros">
                   8 − 1: regroup across zeros
@@ -129,6 +129,9 @@
                 </select>
               </div>
             </div>
+            <p class="custom-entry-note" id="customEntryNote" hidden>
+              Enter any values below. For 8 − 1, type A = 8 and B = 1.
+            </p>
 
             <fieldset class="field">
               <legend>Interpret the operands as</legend>
@@ -369,6 +372,6 @@
       </footer>
     </main>
 
-    <script type="module" src="./arithmetic.js?v=20260730g"></script>
+    <script type="module" src="./arithmetic.js?v=20260730h"></script>
   </body>
 </html>
