@@ -248,6 +248,7 @@ function startCustomProblem(subtraction = false) {
     updateSubtractionControls();
     byId("customOperandA").value = "";
     byId("customOperandB").value = "";
+    byId("customSubtractionBase").value = "2";
     byId("customSubtractionWidth").value = "4";
     byId("customSubtractionError").textContent = "";
     byId("customSubtractionError").classList.remove("visible");
@@ -286,7 +287,7 @@ function startCustomProblem(subtraction = false) {
 
 function loadCustomSubtraction() {
   byId("width").value = byId("customSubtractionWidth").value;
-  byId("base").value = "10";
+  byId("base").value = byId("customSubtractionBase").value;
   setRadio("interpretation", "unsigned");
   setRadio("operation", "subtract");
   setRadio("subtractionMethod", "borrow");

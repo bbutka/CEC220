@@ -8,7 +8,7 @@
       content="A guided CEC220 workbench for carries, borrows, two's complement, overflow, underflow, and fixed-width arithmetic."
     >
     <title>Fixed-Width Arithmetic · CEC220 Logic Studio</title>
-    <link rel="stylesheet" href="../shared/styles.css?v=20260730i">
+    <link rel="stylesheet" href="../shared/styles.css?v=20260730j">
   </head>
   <body class="tool-page" data-mode="learn">
     <header class="site-header">
@@ -215,8 +215,8 @@
               <button type="button" class="quiet" id="cancelCustomSubtraction">Cancel</button>
             </div>
             <p class="microcopy">
-              Choose the register width, then enter any unsigned decimal values
-              for A and B.
+              Choose the input format and register width. Binary entries are
+              interpreted as literal register patterns.
             </p>
             <div class="custom-subtraction-equation" aria-label="Custom subtraction">
               <div class="field">
@@ -230,6 +230,14 @@
               </div>
             </div>
             <div class="custom-subtraction-options">
+              <div class="field">
+                <label for="customSubtractionBase">Input format</label>
+                <select id="customSubtractionBase">
+                  <option value="2" selected>Binary</option>
+                  <option value="10">Decimal</option>
+                  <option value="16">Hexadecimal</option>
+                </select>
+              </div>
               <div class="field">
                 <label for="customSubtractionWidth">Register width</label>
                 <select id="customSubtractionWidth">
@@ -409,6 +417,6 @@
       </footer>
     </main>
 
-    <script type="module" src="./arithmetic.js?v=20260730i"></script>
+    <script type="module" src="./arithmetic.js?v=20260730j"></script>
   </body>
 </html>
