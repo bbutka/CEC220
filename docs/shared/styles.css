@@ -628,6 +628,22 @@ fieldset {
   color: var(--ink);
 }
 
+.custom-problem-button {
+  width: 100%;
+  min-height: 0;
+  padding: 11px;
+  border-color: rgba(82, 215, 208, 0.48);
+  background: var(--cyan-soft);
+  color: var(--ink);
+  text-align: left;
+  font-size: 0.84rem;
+  font-weight: 720;
+}
+
+.custom-problem-button.active {
+  box-shadow: 0 0 0 3px rgba(82, 215, 208, 0.12);
+}
+
 .microcopy {
   margin: 8px 0 0;
   color: var(--faint);
@@ -1073,6 +1089,19 @@ fieldset {
   color: var(--muted);
   font-size: 0.82rem;
   line-height: 1.55;
+}
+
+.borrow-action {
+  margin-top: 12px;
+  border-color: rgba(255, 224, 130, 0.48);
+  background: rgba(255, 224, 130, 0.12);
+  color: var(--yellow);
+}
+
+.borrow-no-action {
+  margin-top: 9px;
+  color: var(--green);
+  font-size: 0.78rem;
 }
 
 .borrow-loan-list {

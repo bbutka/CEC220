@@ -231,6 +231,7 @@ function applyPreset(name) {
   all("[data-preset]").forEach((button) => {
     button.classList.toggle("active", button.dataset.preset === name);
   });
+  byId("customProblem").classList.remove("active");
 
   const callout = byId("conceptCallout");
   callout.innerHTML = "";
@@ -239,6 +240,28 @@ function applyPreset(name) {
   callout.append(title, document.createTextNode(preset.callout));
   updateSubtractionControls();
   loadProblem();
+}
+
+function startCustomProblem() {
+  all("[data-preset]").forEach((button) => button.classList.remove("active"));
+  byId("customProblem").classList.add("active");
+  byId("operandA").value = "";
+  byId("operandB").value = "";
+  const error = byId("setupError");
+  error.textContent = "";
+  error.classList.remove("visible");
+
+  const callout = byId("conceptCallout");
+  callout.innerHTML = "";
+  const title = document.createElement("strong");
+  title.textContent = "Build and test your own arithmetic problem.";
+  callout.append(
+    title,
+    document.createTextNode(
+      "Choose the width, input base, interpretation, and operation. Enter A and B, then select “Load this problem.”",
+    ),
+  );
+  byId("operandA").focus();
 }
 
 function randomRaw(width) {
@@ -581,10 +604,10 @@ function renderMechanics() {
   byId("mechanicsInstruction").textContent = twosMethod
     ? "Add A + ~B with an initial carry-in of 1 at bit 0. This is the hardware form of A − B."
     : borrowMethod
-      ? "Subtract B from A, starting at bit 0. If a column is negative, borrow 1 from the bit immediately to its left; that borrowed 1 is worth 2 in the current column."
+      ? "Subtract B from A, starting at bit 0. If a column is negative, use the borrow button; A will regroup in place and the borrowed 1 will become 2 in the current column."
       : "Add A and B. A total of 2 or 3 writes a result bit and sends a carry of 1 to the next position.";
   byId("mechanicsFlowNote").textContent = borrowMethod
-    ? "Work from right to left. A 1 in “borrow from left” automatically appears one column to the left as “1 lent to right.” The two entries describe the same loan."
+    ? "Work from right to left. Use the borrow control only when the current subtraction is negative. The supplying column will show “1 lent to right,” and A will change to its regrouped column values."
     : "Work from bit 0 on the right toward the most-significant bit. Enter the result and carry leaving each column; it appears automatically as the carry-in to the next column.";
   byId("borrowProcess").hidden = !borrowMethod;
 
@@ -597,9 +620,17 @@ function renderMechanics() {
   const flowInputs = positions
     .map(
       (position) =>
-        `<td><input aria-label="${borrowMethod ? `Borrow from bit ${position + 1} into bit ${position}` : `${flowName} from bit ${position}`}" inputmode="numeric" maxlength="1" data-mechanics-kind="flow" data-position="${position}"></td>`,
+        `<td><input aria-label="${flowName} from bit ${position}" inputmode="numeric" maxlength="1" data-mechanics-kind="flow" data-position="${position}"></td>`,
     )
     .join("");
+  const hiddenBorrowInputs = borrowMethod
+    ? positions
+        .map(
+          (position) =>
+            `<input type="hidden" value="0" data-mechanics-kind="flow" data-position="${position}">`,
+        )
+        .join("")
+    : "";
   const resultInputs = positions
     .map(
       (position) =>
@@ -609,7 +640,6 @@ function renderMechanics() {
   const workRows = borrowMethod
     ? `
         <tr><td>${flowInName}</td>${flowInCells}</tr>
-        <tr><td>${flowName}</td>${flowInputs}</tr>
         <tr><td>result bit</td>${resultInputs}</tr>
       `
     : `
@@ -634,6 +664,7 @@ function renderMechanics() {
         ${workRows}
       </tbody>
     </table>
+    ${hiddenBorrowInputs}
   `;
 
   document
@@ -754,15 +785,32 @@ function updateBorrowProcess() {
   const activeLoans = all('[data-mechanics-kind="flow"]')
     .filter((input) => input.value.trim() === "1")
     .map((input) => Number(input.dataset.position));
+  const nextBorrowPosition = current.columns.find((column) => {
+    const input = document.querySelector(
+      `[data-mechanics-kind="flow"][data-position="${column.position}"]`,
+    );
+    return column.borrowOut === 1 && input?.value.trim() !== "1";
+  })?.position;
+  const borrowAction =
+    nextBorrowPosition === undefined
+      ? ""
+      : `<button type="button" class="borrow-action" data-borrow-position="${nextBorrowPosition}">
+          Regroup A: borrow into bit ${nextBorrowPosition}
+        </button>`;
 
   if (activeLoans.length === 0) {
     guide.innerHTML = `
       <div class="borrow-process-title">How to show a borrow</div>
       <div class="borrow-process-prompt">
         If <strong>A − B − any 1 already lent to the right</strong> is negative,
-        enter <strong>1</strong> in <strong>borrow from left</strong>.
-        The matching loan will appear in the next column automatically.
+        use the regrouping button. A will change in place and the matching loan
+        will appear in the supplying column automatically.
       </div>
+      ${
+        nextBorrowPosition === undefined
+          ? '<div class="borrow-no-action">No column currently requires regrouping.</div>'
+          : borrowAction
+      }
     `;
     return;
   }
@@ -830,7 +878,20 @@ function updateBorrowProcess() {
         })
         .join("")}
     </div>
+    ${borrowAction}
   `;
+}
+
+function handleBorrowGuideClick(event) {
+  const button = event.target.closest("[data-borrow-position]");
+  if (!button) return;
+  const position = Number(button.dataset.borrowPosition);
+  const input = document.querySelector(
+    `[data-mechanics-kind="flow"][data-position="${position}"]`,
+  );
+  if (!input) return;
+  input.value = "1";
+  input.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
 function updateLinkedFlows() {
@@ -961,19 +1022,27 @@ function checkMechanics(showFeedback = true) {
 
   if (firstWrong) {
     if (showFeedback) {
+      const borrowActionMissing =
+        firstWrong.dataset.mechanicsKind === "flow" &&
+        current.operation === "subtract" &&
+        current.subtractionMethod === "borrow";
       const kind =
         firstWrong.dataset.mechanicsKind === "result"
           ? "result bit"
-          : current.operation === "subtract" &&
-              current.subtractionMethod === "borrow"
-            ? "borrow from the bit on the left"
+          : borrowActionMissing
+            ? "regrouping action"
             : "carry-out";
       setFeedback(
         "mechanicsFeedback",
         "error",
-        `The first incorrect step is the ${kind} at bit ${firstWrong.dataset.position}. Recompute that column before moving left.`,
+        borrowActionMissing
+          ? `Bit ${firstWrong.dataset.position} needs regrouping. Use the highlighted “Regroup A” button, then continue the subtraction.`
+          : `The first incorrect step is the ${kind} at bit ${firstWrong.dataset.position}. Recompute that column before moving left.`,
       );
-      firstWrong.focus();
+      const borrowButton = borrowActionMissing
+        ? byId("borrowProcess").querySelector("[data-borrow-position]")
+        : null;
+      (borrowButton ?? firstWrong).focus();
     }
     return false;
   }
@@ -1381,6 +1450,9 @@ function loadQueryProblem() {
 all("[data-preset]").forEach((button) => {
   button.addEventListener("click", () => applyPreset(button.dataset.preset));
 });
+
+byId("customProblem").addEventListener("click", startCustomProblem);
+byId("borrowProcess").addEventListener("click", handleBorrowGuideClick);
 
 all("[data-mode-button]").forEach((button) => {
   button.addEventListener("click", () => switchMode(button.dataset.modeButton));
