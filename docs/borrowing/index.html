@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Interactive binary subtraction practice that shows regrouping directly in operand A.">
+    <title>Binary Borrowing Practice · CEC220 Logic Studio</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+    <link rel="stylesheet" href="./borrowing.css">
+  </head>
+  <body class="tool-page">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="../">
+          <span class="brand-mark" aria-hidden="true">01B</span>
+          <span>CEC220 Logic Studio</span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+          <a href="../#pathway">Course pathway</a>
+          <a href="../#tool-library">All tools</a>
+          <a href="../arithmetic/">Arithmetic</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page borrow-page">
+      <div class="breadcrumb"><a href="../">Logic Studio</a> / Binary Borrowing Practice</div>
+      <section class="borrow-hero">
+        <div>
+          <p class="eyebrow">Unsigned foundations · Lecture 1.4</p>
+          <h1>Binary Borrowing Practice</h1>
+          <p>
+            Click the bit in A that should supply each loan. A changes in place,
+            using the same temporary 2 notation as the Python example.
+          </p>
+        </div>
+        <div class="borrow-mode-switcher" role="group" aria-label="Exercise mode">
+          <button type="button" class="active" data-borrow-mode="test">Test me</button>
+          <button type="button" data-borrow-mode="custom">My problem</button>
+        </div>
+      </section>
+
+      <div class="borrow-layout">
+        <aside class="panel borrow-setup">
+          <div id="testSetup">
+            <h2>Test settings</h2>
+            <div class="field">
+              <label for="testWidth">Register width</label>
+              <select id="testWidth">
+                <option value="4">4 bits</option>
+                <option value="5">5 bits</option>
+                <option value="6" selected>6 bits</option>
+                <option value="8">8 bits</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="testDifficulty">Borrow pattern</label>
+              <select id="testDifficulty">
+                <option value="any">Any borrow</option>
+                <option value="zeros" selected>Across one or more zeros</option>
+              </select>
+            </div>
+            <button type="button" id="newBorrowProblem">New test problem</button>
+            <p class="microcopy">The first problem reproduces the Python example: 100100₂ − 001001₂.</p>
+          </div>
+
+          <div id="customSetup" hidden>
+            <h2>My problem</h2>
+            <div class="field">
+              <label for="customBorrowBase">Input format</label>
+              <select id="customBorrowBase">
+                <option value="2" selected>Binary</option>
+                <option value="10">Decimal</option>
+                <option value="16">Hexadecimal</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="customBorrowWidth">Register width</label>
+              <select id="customBorrowWidth">
+                <option value="4" selected>4 bits</option>
+                <option value="5">5 bits</option>
+                <option value="6">6 bits</option>
+                <option value="8">8 bits</option>
+                <option value="12">12 bits</option>
+                <option value="16">16 bits</option>
+              </select>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="customBorrowA">A</label>
+                <input class="mono-input" id="customBorrowA" autocomplete="off" placeholder="1000">
+              </div>
+              <div class="field">
+                <label for="customBorrowB">B</label>
+                <input class="mono-input" id="customBorrowB" autocomplete="off" placeholder="0001">
+              </div>
+            </div>
+            <button type="button" id="loadBorrowProblem">Start my problem</button>
+            <div class="error-box" id="borrowSetupError" role="alert"></div>
+          </div>
+
+          <div class="borrow-score">
+            <span>Completed columns <strong id="completedColumns">0</strong></span>
+            <span>Mistakes <strong id="mistakeCount">0</strong></span>
+          </div>
+        </aside>
+
+        <section class="panel borrow-exercise" id="borrowExercise">
+          <div class="borrow-problem-banner">
+            <span>Problem</span>
+            <strong id="borrowProblemText"></strong>
+          </div>
+          <div class="borrow-instruction" id="borrowInstruction" aria-live="polite"></div>
+          <div class="borrow-grid-wrap">
+            <div class="borrow-grid" id="borrowGrid"></div>
+          </div>
+          <div class="borrow-feedback" id="borrowFeedback" aria-live="polite"></div>
+          <div class="borrow-history" id="borrowHistory"></div>
+          <div class="borrow-actions">
+            <button type="button" class="quiet" id="borrowHint">Hint</button>
+            <button type="button" class="quiet" id="resetBorrowProblem">Reset problem</button>
+          </div>
+        </section>
+      </div>
+
+      <footer class="footer">
+        <span>CEC220 · Binary Borrowing Practice</span>
+        <span>Choose the source, regroup A, then subtract the column.</span>
+      </footer>
+    </main>
+    <script type="module" src="./borrowing.js"></script>
+  </body>
+</html>
