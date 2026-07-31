@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node tests/arithmetic-core.test.mjs && node tests/addition-core.test.mjs && node tests/borrowing-core.test.mjs && node tests/fsm-core.test.mjs && node tests/algorithm-core.test.mjs && node tests/hamming-core.test.mjs"
+    "test": "node tests/arithmetic-core.test.mjs && node tests/addition-core.test.mjs && node tests/borrowing-core.test.mjs && node tests/twos-core.test.mjs && node tests/fsm-core.test.mjs && node tests/algorithm-core.test.mjs && node tests/hamming-core.test.mjs"
   }
 }

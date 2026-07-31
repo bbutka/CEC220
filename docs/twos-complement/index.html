@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Guided two’s-complement arithmetic exercises for encoding, negation, stored results, carry-out, and signed overflow.">
+    <title>Two’s-Complement Arithmetic · CEC220 Logic Studio</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+    <link rel="stylesheet" href="./twos.css">
+  </head>
+  <body class="tool-page">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="../">
+          <span class="brand-mark" aria-hidden="true">01C</span>
+          <span>CEC220 Logic Studio</span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+          <a href="../addition/">Addition</a>
+          <a href="../borrowing/">Subtraction</a>
+          <a href="./" aria-current="page">Signed</a>
+          <a href="../arithmetic/">Synthesis</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page twos-page">
+      <div class="breadcrumb"><a href="../">Logic Studio</a> / Two’s-Complement Arithmetic</div>
+      <section class="twos-hero">
+        <div>
+          <p class="eyebrow">Signed extension · Lecture 1.5</p>
+          <h1>Two’s-Complement Arithmetic</h1>
+          <p>
+            Predict the mathematics first, then operate on the fixed-width bit
+            patterns. Carry-out and signed overflow are checked separately.
+          </p>
+        </div>
+        <div class="twos-mode-switcher" role="group" aria-label="Exercise mode">
+          <button type="button" class="active" data-twos-mode="test">Test me</button>
+          <button type="button" data-twos-mode="custom">My problem</button>
+        </div>
+      </section>
+
+      <div class="twos-layout">
+        <aside class="panel twos-setup">
+          <div id="testSetup">
+            <h2>Test settings</h2>
+            <div class="field">
+              <label for="testWidth">Register width</label>
+              <select id="testWidth">
+                <option value="4" selected>4 bits</option>
+                <option value="5">5 bits</option>
+                <option value="6">6 bits</option>
+                <option value="8">8 bits</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="testFocus">Problem focus</label>
+              <select id="testFocus">
+                <option value="mixed" selected>Mixed signed arithmetic</option>
+                <option value="subtract">Subtraction and negation</option>
+                <option value="add">Signed addition</option>
+                <option value="overflow">Overflow cases</option>
+                <option value="fits">Results that fit</option>
+              </select>
+            </div>
+            <button type="button" id="newTwosProblem">New test problem</button>
+            <p class="microcopy">The first problem is 3 − 5 using four-bit two’s-complement numbers.</p>
+          </div>
+
+          <div id="customSetup" hidden>
+            <h2>My problem</h2>
+            <div class="field">
+              <label for="customWidth">Register width</label>
+              <select id="customWidth">
+                <option value="4" selected>4 bits</option>
+                <option value="5">5 bits</option>
+                <option value="6">6 bits</option>
+                <option value="8">8 bits</option>
+                <option value="12">12 bits</option>
+                <option value="16">16 bits</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="customOperation">Operation</label>
+              <select id="customOperation">
+                <option value="add">Add</option>
+                <option value="subtract" selected>Subtract</option>
+              </select>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="customA">Signed decimal A</label>
+                <input class="mono-input" id="customA" autocomplete="off" placeholder="3">
+              </div>
+              <div class="field">
+                <label for="customB">Signed decimal B</label>
+                <input class="mono-input" id="customB" autocomplete="off" placeholder="5">
+              </div>
+            </div>
+            <button type="button" id="loadTwosProblem">Start my problem</button>
+            <div class="error-box" id="twosSetupError" role="alert"></div>
+          </div>
+
+          <div class="twos-score">
+            <span>Completed stages <strong id="completedStages">0 / 5</strong></span>
+            <span>Mistakes <strong id="mistakeCount">0</strong></span>
+          </div>
+        </aside>
+
+        <section class="twos-workflow">
+          <div class="twos-problem-banner">
+            <span>Signed decimal problem</span>
+            <strong id="twosProblemText"></strong>
+            <small id="twosRangeText"></small>
+          </div>
+
+          <section class="panel twos-stage" id="stage1">
+            <div class="stage-title"><span>1</span><h2>Encode the operands</h2></div>
+            <p>Enter each signed decimal operand as one fixed-width two’s-complement bit pattern.</p>
+            <div class="answer-grid two-columns">
+              <label><span>A as <span data-width-label></span> bits</span><input class="mono-input bit-answer" id="aBitsAnswer" autocomplete="off"></label>
+              <label><span>B as <span data-width-label></span> bits</span><input class="mono-input bit-answer" id="bBitsAnswer" autocomplete="off"></label>
+            </div>
+            <div class="stage-actions"><button type="button" id="checkEncoding">Check encodings</button><button type="button" class="quiet" data-hint="encoding">Hint</button></div>
+            <div class="stage-feedback" id="encodingFeedback" aria-live="polite"></div>
+          </section>
+
+          <section class="panel twos-stage locked" id="stage2">
+            <div class="stage-title"><span>2</span><h2>Predict the mathematics</h2></div>
+            <p>Ignore the register width momentarily. Find the ordinary mathematical result, then decide whether it fits.</p>
+            <div class="answer-grid two-columns">
+              <label>Mathematical result<input class="mono-input" id="mathAnswer" inputmode="numeric" autocomplete="off"></label>
+              <label>Does it fit the signed range?<select id="fitsAnswer"><option value="">Choose…</option><option value="yes">Yes</option><option value="no">No</option></select></label>
+            </div>
+            <div class="stage-actions"><button type="button" id="checkPrediction">Check prediction</button><button type="button" class="quiet" data-hint="prediction">Hint</button></div>
+            <div class="stage-feedback" id="predictionFeedback" aria-live="polite"></div>
+          </section>
+
+          <section class="panel twos-stage locked" id="stage3">
+            <div class="stage-title"><span>3</span><h2>Prepare B for the adder</h2></div>
+            <div id="subtractPreparation">
+              <p>For A − B, form −B: invert every bit of B, then add 1.</p>
+              <div class="transform-equation">
+                <span>B</span><code id="shownBBits"></code>
+                <span>invert B</span><input class="mono-input bit-answer" id="invertBAnswer" aria-label="Inverted B bits" autocomplete="off">
+                <span>invert B + 1</span><input class="mono-input bit-answer" id="negativeBAnswer" aria-label="Two’s complement of B" autocomplete="off">
+              </div>
+              <div class="stage-actions"><button type="button" id="checkPreparation">Check −B</button><button type="button" class="quiet" data-hint="preparation">Hint</button></div>
+            </div>
+            <div id="addPreparation" hidden>
+              <p>This is addition, so B enters the adder unchanged.</p>
+              <div class="unchanged-pattern"><span>B</span><code id="unchangedBBits"></code></div>
+              <div class="stage-actions"><button type="button" id="confirmUnchangedB">Use B unchanged</button></div>
+            </div>
+            <div class="stage-feedback" id="preparationFeedback" aria-live="polite"></div>
+          </section>
+
+          <section class="panel twos-stage locked" id="stage4">
+            <div class="stage-title"><span>4</span><h2>Operate on the bit patterns</h2></div>
+            <p>Add A to the prepared B pattern. Enter only the stored bits and the carry leaving the most-significant column.</p>
+            <div class="pattern-operation" aria-label="Bit-pattern addition">
+              <code id="adderABits"></code>
+              <span>+</span><code id="adderBBits"></code>
+            </div>
+            <div class="answer-grid two-columns">
+              <label><span>Stored <span data-width-label></span>-bit result</span><input class="mono-input bit-answer" id="storedBitsAnswer" autocomplete="off"></label>
+              <label>Final carry-out<select id="carryAnswer"><option value="">Choose…</option><option value="0">0</option><option value="1">1</option></select></label>
+            </div>
+            <div class="stage-actions"><button type="button" id="checkMechanics">Check bit mechanics</button><button type="button" class="quiet" data-hint="mechanics">Hint</button></div>
+            <div class="stage-feedback" id="mechanicsFeedback" aria-live="polite"></div>
+          </section>
+
+          <section class="panel twos-stage locked" id="stage5">
+            <div class="stage-title"><span>5</span><h2>Interpret the stored result</h2></div>
+            <p>Interpret the stored bits as signed, then determine signed overflow. Do not use carry-out as the overflow rule.</p>
+            <div class="answer-grid two-columns">
+              <label>Stored signed value<input class="mono-input" id="signedResultAnswer" inputmode="numeric" autocomplete="off"></label>
+              <label>Signed overflow?<select id="overflowAnswer"><option value="">Choose…</option><option value="yes">Yes</option><option value="no">No</option></select></label>
+            </div>
+            <div class="stage-actions"><button type="button" id="checkInterpretation">Check interpretation</button><button type="button" class="quiet" data-hint="interpretation">Hint</button></div>
+            <div class="stage-feedback" id="interpretationFeedback" aria-live="polite"></div>
+            <div class="twos-summary" id="twosSummary"></div>
+          </section>
+        </section>
+      </div>
+
+      <footer class="footer">
+        <span>CEC220 · Two’s-Complement Arithmetic</span>
+        <span>The adder processes patterns; signed interpretation supplies meaning.</span>
+      </footer>
+    </main>
+    <script type="module" src="./twos.js"></script>
+  </body>
+</html>

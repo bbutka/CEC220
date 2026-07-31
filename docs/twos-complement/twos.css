@@ -1,0 +1,329 @@
+.twos-page {
+  max-width: 1320px;
+}
+
+.twos-hero {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 42px 0 24px;
+}
+
+.twos-hero h1 {
+  margin: 6px 0 10px;
+  font-size: clamp(2.2rem, 5vw, 4.5rem);
+  line-height: 0.98;
+}
+
+.twos-hero p:not(.eyebrow) {
+  max-width: 780px;
+  color: var(--muted);
+}
+
+.twos-mode-switcher {
+  display: flex;
+  flex: 0 0 auto;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--panel-soft);
+}
+
+.twos-mode-switcher button {
+  min-height: 0;
+  padding: 10px 14px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+}
+
+.twos-mode-switcher button.active {
+  background: var(--cyan-soft);
+  color: var(--ink);
+}
+
+.twos-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.27fr) minmax(0, 0.73fr);
+  align-items: start;
+  gap: 18px;
+}
+
+.twos-setup {
+  position: sticky;
+  top: 88px;
+}
+
+.twos-setup h2 {
+  margin: 0 0 16px;
+}
+
+.twos-score {
+  display: grid;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.twos-score span {
+  display: flex;
+  justify-content: space-between;
+}
+
+.twos-score strong {
+  color: var(--ink);
+  font-family: var(--mono);
+}
+
+.twos-workflow {
+  display: grid;
+  gap: 14px;
+}
+
+.twos-problem-banner {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 6px 20px;
+  padding: 18px 20px;
+  border: 1px solid rgba(82, 215, 208, 0.42);
+  border-radius: 12px;
+  background: var(--cyan-soft);
+}
+
+.twos-problem-banner > span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.twos-problem-banner strong {
+  grid-row: span 2;
+  justify-self: end;
+  font-family: var(--mono);
+  font-size: clamp(1.8rem, 4vw, 3rem);
+}
+
+.twos-problem-banner small {
+  color: var(--muted);
+}
+
+.twos-stage {
+  transition: opacity 160ms ease, border-color 160ms ease;
+}
+
+.twos-stage.locked {
+  opacity: 0.46;
+}
+
+.twos-stage.locked :is(input, select, button) {
+  pointer-events: none;
+}
+
+.twos-stage.complete {
+  border-color: rgba(110, 231, 162, 0.45);
+}
+
+.stage-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stage-title > span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--cyan);
+  border-radius: 8px;
+  background: var(--cyan-soft);
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
+.stage-title h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.twos-stage > p,
+.twos-stage > div > p {
+  color: var(--muted);
+}
+
+.answer-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.answer-grid.two-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.answer-grid label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 720;
+}
+
+.bit-answer {
+  letter-spacing: 0.22em;
+}
+
+input.correct,
+select.correct {
+  border-color: var(--green);
+  background: var(--green-soft);
+}
+
+input.incorrect,
+select.incorrect {
+  border-color: var(--red);
+  background: var(--red-soft);
+}
+
+.stage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.stage-feedback {
+  min-height: 22px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.stage-feedback.error {
+  color: var(--red);
+}
+
+.stage-feedback.success {
+  color: var(--green);
+}
+
+.stage-feedback.hint {
+  color: var(--yellow);
+}
+
+.transform-equation {
+  display: grid;
+  grid-template-columns: minmax(110px, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 14px;
+}
+
+.transform-equation > span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 720;
+}
+
+.transform-equation code,
+.unchanged-pattern code,
+.pattern-operation code {
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+  color: var(--ink);
+  font-size: 1.08rem;
+  letter-spacing: 0.2em;
+}
+
+.unchanged-pattern {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.unchanged-pattern span {
+  color: var(--muted);
+  font-weight: 720;
+}
+
+.pattern-operation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.pattern-operation span {
+  color: var(--cyan);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.twos-summary {
+  display: none;
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid rgba(110, 231, 162, 0.45);
+  border-radius: 9px;
+  background: var(--green-soft);
+  color: var(--green);
+  line-height: 1.55;
+}
+
+.twos-summary.visible {
+  display: block;
+}
+
+@media (max-width: 920px) {
+  .twos-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .twos-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .twos-setup {
+    position: static;
+  }
+}
+
+@media (max-width: 600px) {
+  .twos-mode-switcher {
+    width: 100%;
+  }
+
+  .twos-mode-switcher button {
+    flex: 1;
+  }
+
+  .twos-problem-banner,
+  .answer-grid.two-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .twos-problem-banner strong {
+    grid-row: auto;
+    justify-self: start;
+  }
+
+  .transform-equation {
+    grid-template-columns: 1fr;
+  }
+
+  .pattern-operation {
+    grid-template-columns: 1fr;
+  }
+}
