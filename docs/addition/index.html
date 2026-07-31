@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Interactive binary addition practice with student-entered result bits and visible carry propagation.">
+    <title>Binary Addition Practice · CEC220 Logic Studio</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+    <link rel="stylesheet" href="./addition.css">
+  </head>
+  <body class="tool-page">
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="../">
+          <span class="brand-mark" aria-hidden="true">01A</span>
+          <span>CEC220 Logic Studio</span>
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+          <a href="./" aria-current="page">Addition</a>
+          <a href="../borrowing/">Subtraction</a>
+          <a href="../arithmetic/">Synthesis</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page addition-page">
+      <div class="breadcrumb"><a href="../">Logic Studio</a> / Binary Addition Practice</div>
+      <section class="addition-hero">
+        <div>
+          <p class="eyebrow">Unsigned foundations · Lecture 1.4</p>
+          <h1>Binary Addition Practice</h1>
+          <p>
+            Enter the result bit and carry-out for one column at a time. Every
+            carry you generate appears as the carry-in of the next column.
+          </p>
+        </div>
+        <div class="addition-mode-switcher" role="group" aria-label="Exercise mode">
+          <button type="button" class="active" data-addition-mode="test">Test me</button>
+          <button type="button" data-addition-mode="custom">My problem</button>
+        </div>
+      </section>
+
+      <div class="addition-layout">
+        <aside class="panel addition-setup">
+          <div id="testSetup">
+            <h2>Test settings</h2>
+            <div class="field">
+              <label for="testWidth">Register width</label>
+              <select id="testWidth">
+                <option value="4">4 bits</option>
+                <option value="5" selected>5 bits</option>
+                <option value="6">6 bits</option>
+                <option value="8">8 bits</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="testDifficulty">Carry pattern</label>
+              <select id="testDifficulty">
+                <option value="any">At least one carry</option>
+                <option value="chain" selected>Carry chain</option>
+              </select>
+            </div>
+            <button type="button" id="newAdditionProblem">New test problem</button>
+            <p class="microcopy">The first problem is 01011₂ + 00110₂, a three-column carry chain.</p>
+          </div>
+
+          <div id="customSetup" hidden>
+            <h2>My problem</h2>
+            <div class="field">
+              <label for="customAdditionBase">Input format</label>
+              <select id="customAdditionBase">
+                <option value="2" selected>Binary</option>
+                <option value="10">Decimal</option>
+                <option value="16">Hexadecimal</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="customAdditionWidth">Register width</label>
+              <select id="customAdditionWidth">
+                <option value="4">4 bits</option>
+                <option value="5" selected>5 bits</option>
+                <option value="6">6 bits</option>
+                <option value="8">8 bits</option>
+                <option value="12">12 bits</option>
+                <option value="16">16 bits</option>
+              </select>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="customAdditionA">A</label>
+                <input class="mono-input" id="customAdditionA" autocomplete="off" placeholder="01011">
+              </div>
+              <div class="field">
+                <label for="customAdditionB">B</label>
+                <input class="mono-input" id="customAdditionB" autocomplete="off" placeholder="00110">
+              </div>
+            </div>
+            <button type="button" id="loadAdditionProblem">Start my problem</button>
+            <div class="error-box" id="additionSetupError" role="alert"></div>
+          </div>
+
+          <div class="addition-score">
+            <span>Completed columns <strong id="completedColumns">0</strong></span>
+            <span>Mistakes <strong id="mistakeCount">0</strong></span>
+          </div>
+        </aside>
+
+        <section class="panel addition-exercise">
+          <div class="addition-problem-banner">
+            <span>Problem</span>
+            <strong id="additionProblemText"></strong>
+          </div>
+          <div class="addition-instruction" id="additionInstruction" aria-live="polite"></div>
+          <div class="addition-grid-wrap">
+            <div class="addition-grid" id="additionGrid"></div>
+          </div>
+          <p class="addition-direction">
+            Work from bit 0 on the right toward the most-significant bit. A
+            correct carry-out automatically becomes the next column’s carry-in.
+          </p>
+          <div class="addition-feedback" id="additionFeedback" aria-live="polite"></div>
+          <div class="addition-history" id="additionHistory"></div>
+          <div class="addition-actions">
+            <button type="button" class="quiet" id="additionHint">Hint</button>
+            <button type="button" class="quiet" id="resetAdditionProblem">Reset problem</button>
+          </div>
+        </section>
+      </div>
+
+      <footer class="footer">
+        <span>CEC220 · Binary Addition Practice</span>
+        <span>Generate the carry, then follow it into the next column.</span>
+      </footer>
+    </main>
+    <script type="module" src="./addition.js"></script>
+  </body>
+</html>
